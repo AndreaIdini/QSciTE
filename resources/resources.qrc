@@ -1,0 +1,12 @@
+<!DOCTYPE RCC><RCC version="1.0">
+<qresource>
+	
+	<file>QSciTE_icon.svg</file>
+	<file>splash.png</file>
+	
+	<file>icons/open.png</file>
+
+	<file>about.txt</file>
+
+</qresource>
+</RCC>

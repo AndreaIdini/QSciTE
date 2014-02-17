@@ -1,0 +1,10 @@
+
+This program is provided as is without any guarantees or warranty.
+
+Although the authors have attempted to find and correct any bugs in the program, the authors are not responsible for any damage or losses of any kind caused by the use or misuse of the program.
+
+The authors are under no obligation to provide support, service, corrections, or upgrades to the program.
+
+For more information, please send and email to the author
+
+jose.henriques@dfki.de
