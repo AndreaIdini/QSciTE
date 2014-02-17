@@ -118,7 +118,7 @@ message( "=========================================================\n")
 # Create target QScite
 #----------------------------------------------------------------------------
 # files which need to be moc'd by Qt
-set( QSciTE_MOC_SRCS	src/MainWindow.h )
+set( QSciTE_MOC_SRCS	src/MainWindow.hpp )
 						
 # files wich need to be uic by Qt (empty for now)
 set( QSciTE_UI_SRCS	 )
@@ -130,16 +130,17 @@ set( QSciTE_SRCS_CXX 	src/main.cpp
 						)
 
 # build ui_XXX files from the XML-style .ui files
-QT4_WRAP_UI( QSciTE_UI_SRCS src/QSciTE.ui src/about.ui )
+QT4_WRAP_UI( QSciTE_UI_CXX resources/QSciTE.ui )
 # this moc's the above variable and appends to the cxx sources
-QT4_WRAP_CPP( QSciTE_SRCS_CXX ${STUDIO_MOC_SRCS} )
+QT4_WRAP_CPP( QSciTE_SRCS_CXX ${QSciTE_MOC_SRCS} )
 # generate rules for building source files from the resources
-QT4_ADD_RESOURCES( QSciTE_UI_SRCS resources/resources.qrc )
+QT4_ADD_RESOURCES( QSciTE_RCC_SRCS resources/resources.qrc )
 
 
 include_directories( 	${Boost_INCLUDE_DIRS}
 						${QT_INCLUDE_DIR}
 						${QT_QTDESIGNER_INCLUDE_DIR}
+						${QSciTE_BINARY_DIR}
 												
 						resources )
 
@@ -152,7 +153,7 @@ if( ${CMAKE_SYSTEM_NAME} MATCHES "Darwin" )
 	set_target_properties( QSciTE PROPERTIES MACOSX_BUNDLE_INFO_PLIST ${PROJECT_SOURCE_DIR}/resources/Info.plist )
 	#set_source_files_properties( resources/background.png PROPERTIES MACOSX_PACKAGE_LOCATION Resources )
 	#set_source_files_properties( resources/package_icon.icns PROPERTIES MACOSX_PACKAGE_LOCATION Resources )
-	#set_source_files_properties( resources/studio_icon.icns PROPERTIES MACOSX_PACKAGE_LOCATION Resources )
+	#set_source_files_properties( resources/qscite_icon.icns PROPERTIES MACOSX_PACKAGE_LOCATION Resources )
 	#set_source_files_properties( resources/DS_Store_custom PROPERTIES MACOSX_PACKAGE_LOCATION Resources )
 endif( ${CMAKE_SYSTEM_NAME} MATCHES "Darwin" )
 
