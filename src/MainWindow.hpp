@@ -9,6 +9,10 @@
 
 #include <ui_QSciTE.h>
 
+#include <ScintillaEdit.h>
+
+#include "BufferManager.hpp"
+
 
 class MainWindow : public QMainWindow {
 
@@ -25,6 +29,9 @@ public:
 	void initialize( );
 	
 public slots:
+	
+	void newFile( );
+	void closeFile( int );
 
 protected slots:
 	
@@ -49,6 +56,9 @@ private:
 	// --== variables ==--
 	QSettings settings;
 	Ui::QSciTE ui;
+	boost::shared_ptr< ScintillaEdit > sciEditor;
+	
+	BufferManagerPtr bufferManager;
 	
 	bool windowModified;
 	QString currentFileName;
@@ -62,6 +72,7 @@ private:
 	QToolBar *fileToolBar;
 	
 	// Actions:
+	QAction *newFileAction;
 	QAction *openAction;
 	
 };

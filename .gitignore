@@ -24,4 +24,4 @@ cppunit-reports
 .cproject
 *.xcworkspace
 data_*
-
+3rdparty

@@ -21,7 +21,7 @@ project( QSciTE )
 #   - ${PROJECT_SOURCE_DIR}/build folder IF BUILD_PATH not set.
 #	- ${BUILD_PATH}/build
 #----------------------------------------------------------------------------
-set( CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/3rdparty/odysseus/tools/cmake )
+set( CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/tools/cmake )
 
 if( BUILD_PATH )
 	set( _BUILD_PATH ${BUILD_PATH} )
@@ -103,6 +103,12 @@ if( ${CMAKE_SYSTEM_NAME} MATCHES "Windows" )
 
 endif( ${CMAKE_SYSTEM_NAME} MATCHES "Windows" )
 
+
+# Scintilla stuff:
+set( SCINTILLA_INSTALL_DIR ${PROJECT_SOURCE_DIR}/3rdparty/scintilla )
+find_package( Scintilla REQUIRED )
+
+
 #----------------------------------------------------------------------------
 # Pretty output:
 #----------------------------------------------------------------------------
@@ -127,6 +133,10 @@ set( QSciTE_UI_SRCS	 )
 set( QSciTE_SRCS_CXX 	src/main.cpp
 						src/MainWindow.cpp
 						src/MainWindow.hpp
+						src/Buffer.hpp
+						src/Buffer.cpp
+						src/BufferManager.hpp
+						src/BufferManager.cpp
 						)
 
 # build ui_XXX files from the XML-style .ui files
@@ -141,6 +151,7 @@ include_directories( 	${Boost_INCLUDE_DIRS}
 						${QT_INCLUDE_DIR}
 						${QT_QTDESIGNER_INCLUDE_DIR}
 						${QSciTE_BINARY_DIR}
+						${SCINTILLA_INCLUDE_DIRS}
 												
 						resources )
 
@@ -157,7 +168,7 @@ if( ${CMAKE_SYSTEM_NAME} MATCHES "Darwin" )
 	#set_source_files_properties( resources/DS_Store_custom PROPERTIES MACOSX_PACKAGE_LOCATION Resources )
 endif( ${CMAKE_SYSTEM_NAME} MATCHES "Darwin" )
 
-target_link_libraries( QSciTE	${QT_LIBRARIES} ${Boost_LIBRARIES} )
+target_link_libraries( QSciTE	${QT_LIBRARIES} ${Boost_LIBRARIES} ${SCINTILLA_LIBRARIES} )
 
 #----------------------------------------------------------------------------
 # Register some post Build commands:

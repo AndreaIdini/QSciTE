@@ -6,7 +6,13 @@ MainWindow::MainWindow( QApplication &app ) : QMainWindow(), windowModified(fals
 	// read ui:
 	ui.setupUi( this );
 	
+	// create and set the scintilla editor as main widget:
+//	sciEditor = boost::shared_ptr< ScintillaEdit >( new ScintillaEdit( this ) );
+//	sciEditor->hide();
+	
 	// refine ui:
+	ui.tabBar->clear();
+	connect( ui.tabBar, SIGNAL(tabCloseRequested(int)), this, SLOT(closeFile(int)) );
 	
 	// create ui elements:
 	createActions( );
@@ -29,6 +35,7 @@ MainWindow::MainWindow( QApplication &app ) : QMainWindow(), windowModified(fals
  * @author: jhenriques 2014
  */
 MainWindow::~MainWindow() {
+
 }
 
 
@@ -39,7 +46,63 @@ MainWindow::~MainWindow() {
  */
 void MainWindow::initialize( ) {
 	
-	// TODO
+//	// TODO
+//	
+//	ScintillaDocument *pDoc = sciEditor->get_doc();
+//
+//	sciEditor->addText( 14, "Jose Henriques" );
+//
+//	//sciEditor->setLexer( SCLEX_CPP );
+//	
+//	QByteArray buffer = sciEditor->getText( pDoc->length() );
+//	std::cout << "Current Text: " << QString( buffer ).toStdString() << std::endl;
+//	
+//	
+//	//create a new document:
+////	ScintillaDocument *pDoc2 = new ScintillaDocument( );
+////	sciEditor->setDocPointer( pDoc2 );
+//	
+//	sptr_t newDoc = sciEditor->createDocument( );
+//	sciEditor->setDocPointer( newDoc );
+//	
+//	ScintillaDocument *pDoc2 = sciEditor->get_doc();
+//	
+//	sciEditor->addText( 6, "Amaral" );
+//	buffer = sciEditor->getText( pDoc2->length( ) );
+//	std::cout << "Current Text 2: " << QString( buffer ).toStdString() << std::endl;
+
+}
+
+/**
+ * MainWindow::newFile
+ * Creates a new empty buffer;
+ * @author: jhenriques 2014
+ */
+void MainWindow::newFile( ) {
+	
+	std::cout << "creating new file..." << std::endl;
+	
+	// create new tab entry:
+	ui.tabBar->addTab( new ScintillaEdit( this ), tr("untitled") );
+	
+	
+	
+//	BufferPtr newBuffer = BufferPtr( new Buffer( ) );
+//	
+//	bufferManager->add( newBuffer );
+//	bufferManager->setCurrent( newBuffer );
+}
+
+/**
+ * MainWindow::closeFile
+ * closes file at given index;
+ * @author: jhenriques 2014
+ */
+void MainWindow::closeFile( int index ) {
+	
+	std::cout << "closing file " << index << std::endl;
+	
+	ui.tabBar->removeTab( index );
 }
 
 /**
@@ -48,6 +111,13 @@ void MainWindow::initialize( ) {
  * @author: jhenriques 2014
  */
 void MainWindow::createActions() {
+	
+	// New File Action:
+	newFileAction = new QAction( "&New", this );
+	newFileAction->setIcon( QIcon( ":/icons/new.png" ) );
+	newFileAction->setShortcut( QKeySequence::New );
+	newFileAction->setStatusTip( tr("New") );
+	connect( newFileAction, SIGNAL(triggered()), this, SLOT(newFile()) );
 	
 	// Open Action:
 	openAction = new QAction( "&Open File", this );
@@ -69,7 +139,8 @@ void MainWindow::createMenus() {
 	
 	// File menu:
 	fileMenu = menuBar()->addMenu( tr("&File") );
-//	fileMenu->addAction( openAction );
+	fileMenu->addAction( newFileAction );
+	fileMenu->addAction( openAction );
 //	fileMenu->addAction( saveAction );
 //	fileMenu->addAction( saveAsAction );
 //	fileMenu->addSeparator();
@@ -86,6 +157,7 @@ void MainWindow::createToolBars() {
 	
 	// create file toolBar:
 	fileToolBar = addToolBar( tr("&File") );
+	fileToolBar->addAction( newFileAction );
 	fileToolBar->addAction( openAction );
 //	fileToolBar->addAction( saveAction );
 //	fileToolBar->addAction( saveAsAction );
