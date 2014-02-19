@@ -133,10 +133,15 @@ set( QSciTE_UI_SRCS	 )
 set( QSciTE_SRCS_CXX 	src/main.cpp
 						src/MainWindow.cpp
 						src/MainWindow.hpp
-						src/Buffer.hpp
-						src/Buffer.cpp
-						src/BufferManager.hpp
-						src/BufferManager.cpp
+						src/Editor.hpp
+						src/Editor.cpp
+						src/EditorManager.hpp
+						src/EditorManager.cpp
+
+						#src/Buffer.hpp
+						#src/Buffer.cpp
+						#src/BufferManager.hpp
+						#src/BufferManager.cpp
 						)
 
 # build ui_XXX files from the XML-style .ui files

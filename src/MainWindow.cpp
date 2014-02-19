@@ -1,5 +1,7 @@
 #include "MainWindow.hpp"
 
+#include <SciLexer.h>
+
 
 MainWindow::MainWindow( QApplication &app ) : QMainWindow(), windowModified(false) {
 	
@@ -28,6 +30,8 @@ MainWindow::MainWindow( QApplication &app ) : QMainWindow(), windowModified(fals
 	
 	// on mac show unified toolbar:
 	setUnifiedTitleAndToolBarOnMac( true );
+	
+	editorManager = EditorManagerPtr( new EditorManager( ) );
 }
 
 /**
@@ -80,17 +84,59 @@ void MainWindow::initialize( ) {
  */
 void MainWindow::newFile( ) {
 	
-	std::cout << "creating new file..." << std::endl;
+	EditorPtr editor = editorManager->createEditor( );
 	
-	// create new tab entry:
-	ui.tabBar->addTab( new ScintillaEdit( this ), tr("untitled") );
+	if( editor ) {
+		
+		ScintillaEditPtr editorWidget = editor->getScintillaEdit( );
+		
+		setupEditor( editorWidget );
+		registerEditorListeners( editorWidget );
+				
+		// create new tab entry:
+		ui.tabBar->addTab( editorWidget.get(), tr("untitled") );
+	}
+}
+
+/**
+ * MainWindow::openFile
+ * Opend existing file
+ * @author: jhenriques 2014
+ */
+void MainWindow::openFile( QString fileName ) {
 	
+	// show open file dialog:
+	if( fileName.isEmpty() )
+		fileName = QFileDialog::getOpenFileName( this, tr("Open file"), settings.value( "path/load", "." ).toString() );
 	
+	if( !fileName.isEmpty() ) {
+		
+		// detect file extension:
+		int language = SCLEX_NULL;
+		if( fileName.endsWith( ".cpp", Qt::CaseInsensitive ) || fileName.endsWith( ".hpp", Qt::CaseInsensitive ) ) {
+			language = SCLEX_CPP;
+		}
 	
-//	BufferPtr newBuffer = BufferPtr( new Buffer( ) );
-//	
-//	bufferManager->add( newBuffer );
-//	bufferManager->setCurrent( newBuffer );
+		EditorPtr editor = editorManager->createEditor( );
+		
+		if( editor ) {
+			
+			ScintillaEditPtr editorWidget = editor->getScintillaEdit( );
+			setupEditor( editorWidget );
+			registerEditorListeners( editorWidget );
+			
+			editorWidget->setLexer( language );
+			editorWidget->clearDocumentStyle();
+			
+			editor->loadFile( fileName );
+			
+			editorWidget->startStyling( 0, 0x1f );
+			
+			// create new tab entry:
+			int index = ui.tabBar->addTab( editorWidget.get(), editor->getFileName() );
+			ui.tabBar->setCurrentIndex( index );
+		}
+	}
 }
 
 /**
@@ -102,8 +148,77 @@ void MainWindow::closeFile( int index ) {
 	
 	std::cout << "closing file " << index << std::endl;
 	
+//	// get the editor to remove:
+//	ScintillaEdit *toRemove = (ScintillaEdit *)ui.tabBar->widget( index );
+//	
+//	// check if editor needs saving:
+//	toRemove->setReadOnly( 1 );
+//	
+//	for( int i = 0, iCount = editors.size(); i < iCount; ++i ) {
+//		if( toRemove == editors[i] ) {
+//			editors.erase( editors.begin() + i );
+//			break;
+//		}
+//	}
+	
+	// Finally remove tab:
 	ui.tabBar->removeTab( index );
 }
+
+/**
+ * MainWindow::setupEditor
+ * Setups default options for the editor.
+ * @author: jhenriques 2014
+ */
+void MainWindow::setupEditor( ScintillaEditPtr editor ) {
+
+	// Margins:
+	editor->setMarginTypeN( 1, 1 );
+	editor->setMarginWidthN( 1, 20 );
+}
+
+/**
+ * MainWindow::registerEditorListeners
+ * Registers to listen to ScintillaEdit widget important signals;
+ * @author: jhenriques 2014
+ */
+void MainWindow::registerEditorListeners( ScintillaEditPtr editor ) {
+	
+	connect( editor.get(), SIGNAL(savePointChanged(bool)), this, SLOT(editorModified(bool)) );
+	//connect( editor.get(), SIGNAL(styleNeeded(int)), this, SLOT(styleNeeded(int) ) );
+}
+
+
+/**
+ * MainWindow::editorModified
+ * Called when scintilla signals a dirty flag on editor.
+ * @author: jhenriques 2014
+ */
+void MainWindow::editorModified( bool dirty ) {
+	
+	ScintillaEdit *modifiedEditor = (ScintillaEdit *) QObject::sender();
+	
+	EditorPtr editor = editorManager->getEditor( modifiedEditor );
+	if( editor ) {
+		
+		editor->isDirty = dirty;
+		
+		int index = ui.tabBar->indexOf( modifiedEditor );
+		if( dirty ) {
+			ui.tabBar->setTabText( index, editor->getFileName() + "*" );
+		} else {
+			ui.tabBar->setTabText( index, editor->getFileName() );
+		}
+	}
+}
+			
+//void MainWindow::styleNeeded( int position ) {
+//	
+//	ScintillaEdit *modifiedEditor = (ScintillaEdit *) QObject::sender();
+//	
+//	std::cout << "style needed for position " << position << std::endl;
+//}
+
 
 /**
  * MainWindow::createActions
@@ -120,13 +235,11 @@ void MainWindow::createActions() {
 	connect( newFileAction, SIGNAL(triggered()), this, SLOT(newFile()) );
 	
 	// Open Action:
-	openAction = new QAction( "&Open File", this );
-	openAction->setIcon( QIcon(":/icons/open.png") );
-	openAction->setShortcut( QKeySequence::Open );
-	openAction->setStatusTip( tr("Open file") );
-
-	// TODO:
-	//connect( openAction, SIGNAL(triggered()), this, SLOT(loadScene()) );
+	openFileAction = new QAction( "&Open File", this );
+	openFileAction->setIcon( QIcon(":/icons/open.png") );
+	openFileAction->setShortcut( QKeySequence::Open );
+	openFileAction->setStatusTip( tr("Open file") );
+	connect( openFileAction, SIGNAL(triggered()), this, SLOT(openFile()) );
 	
 }
 
@@ -140,7 +253,7 @@ void MainWindow::createMenus() {
 	// File menu:
 	fileMenu = menuBar()->addMenu( tr("&File") );
 	fileMenu->addAction( newFileAction );
-	fileMenu->addAction( openAction );
+	fileMenu->addAction( openFileAction );
 //	fileMenu->addAction( saveAction );
 //	fileMenu->addAction( saveAsAction );
 //	fileMenu->addSeparator();
@@ -158,7 +271,7 @@ void MainWindow::createToolBars() {
 	// create file toolBar:
 	fileToolBar = addToolBar( tr("&File") );
 	fileToolBar->addAction( newFileAction );
-	fileToolBar->addAction( openAction );
+	fileToolBar->addAction( openFileAction );
 //	fileToolBar->addAction( saveAction );
 //	fileToolBar->addAction( saveAsAction );
 

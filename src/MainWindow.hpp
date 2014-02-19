@@ -4,14 +4,10 @@
 #define QSCITE_MAINWINDOW_HPP
 
 #include <boost/shared_ptr.hpp>
-
 #include <QtGui>
-
 #include <ui_QSciTE.h>
 
-#include <ScintillaEdit.h>
-
-#include "BufferManager.hpp"
+#include "EditorManager.hpp"
 
 
 class MainWindow : public QMainWindow {
@@ -31,9 +27,13 @@ public:
 public slots:
 	
 	void newFile( );
+	void openFile( QString fileName = "" );
 	void closeFile( int );
 
 protected slots:
+	
+	void editorModified( bool );
+	//void styleNeeded( int );
 	
 protected:
 	
@@ -43,6 +43,9 @@ private:
 	
 	
 	// --== methods ==--
+	void setupEditor( ScintillaEditPtr );
+	void registerEditorListeners( ScintillaEditPtr );
+	
 	void createActions();
 	void createMenus();
 	void createToolBars();
@@ -56,9 +59,8 @@ private:
 	// --== variables ==--
 	QSettings settings;
 	Ui::QSciTE ui;
-	boost::shared_ptr< ScintillaEdit > sciEditor;
-	
-	BufferManagerPtr bufferManager;
+
+	EditorManagerPtr editorManager;
 	
 	bool windowModified;
 	QString currentFileName;
@@ -73,7 +75,7 @@ private:
 	
 	// Actions:
 	QAction *newFileAction;
-	QAction *openAction;
+	QAction *openFileAction;
 	
 };
 
