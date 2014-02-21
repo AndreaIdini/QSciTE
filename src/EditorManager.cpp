@@ -61,6 +61,10 @@ EditorPtr EditorManager::getEditor( ScintillaEdit *widget ) {
 	
 	std::map< ScintillaEdit *, EditorPtr >::iterator found = editorsPtrMap.find( widget );
 	
+	if( found == editorsPtrMap.end() ) {
+		return EditorPtr();
+	}
+	
 	return found->second;
 }
 

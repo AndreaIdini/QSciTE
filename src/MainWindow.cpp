@@ -253,6 +253,8 @@ void MainWindow::openFile( QString fileName ) {
 			
 			editor->loadFile( fileName );
 			
+			editorWidget->emptyUndoBuffer();
+			
 			
 //			SCE_C_DEFAULT=0
 //			SCE_C_COMMENT=1
@@ -384,6 +386,40 @@ void MainWindow::closeFile( int index ) {
 }
 
 /**
+ * MainWindow::undo
+ * This is simply a pass trough because editor handles undos/redos
+ * @author: jhenriques 2014
+ */
+void MainWindow::undo( ) {
+	
+	// get current editor:
+	ScintillaEdit *editor = (ScintillaEdit *) ui.tabBar->currentWidget();
+	
+	if( editor && editor->canUndo() ) {
+		editor->undo();
+	} else {
+		ui.statusbar->showMessage( tr("Nothing to undo..."), 2000 );
+	}
+}
+
+/**
+ * MainWindow::redo
+ * This is simply a pass trough because editor handles undos/redos
+ * @author: jhenriques 2014
+ */
+void MainWindow::redo( ) {
+
+	// get current editor:
+	ScintillaEdit *editor = (ScintillaEdit *) ui.tabBar->currentWidget();
+
+	if( editor && editor->canRedo() ) {
+		editor->redo();
+	} else {
+		ui.statusbar->showMessage( tr("Nothing to redo..."), 2000 );
+	}
+}
+
+/**
  * MainWindow::find
  * shows the find dialogs and sets editor for the search.
  * @author: jhenriques 2014
@@ -502,6 +538,7 @@ void MainWindow::registerEditorListeners( ScintillaEditPtr editor ) {
 	
 	connect( editor.get(), SIGNAL(savePointChanged(bool)), this, SLOT(editorModified(bool)) );
 	//connect( editor.get(), SIGNAL(styleNeeded(int)), this, SLOT(styleNeeded(int) ) );
+	
 }
 
 /**
@@ -515,6 +552,9 @@ void MainWindow::registerMainWindowActions() {
 	addAction( openFileAction );
 	addAction( saveFileAction );
 	addAction( saveAsFileAction );
+	
+	addAction( undoAction );
+	addAction( redoAction );
 	
 	addAction( findAction );
 	addAction( findNextAction );
@@ -646,6 +686,21 @@ void MainWindow::createActions() {
 	connect( saveAsFileAction, SIGNAL(triggered()), this, SLOT(saveAsFile()) );
 	
 	
+	// Undo Action:
+	undoAction = new QAction( "Undo", this );
+	undoAction->setIcon( QIcon(":/icons/undo.png") );
+	undoAction->setShortcut( QKeySequence::Undo );
+	undoAction->setStatusTip( tr("Undo") );
+	connect( undoAction, SIGNAL(triggered()), this, SLOT(undo()) );
+	
+	// Redo Action:
+	redoAction = new QAction( "Redo", this );
+	redoAction->setIcon( QIcon(":/icons/redo.png") );
+	redoAction->setShortcut( QKeySequence::Redo );
+	redoAction->setStatusTip( tr("Redo") );
+	connect( redoAction, SIGNAL(triggered()), this, SLOT(redo()) );
+	
+	
 	// Find Action:
 	findAction = new QAction( "&Find...", this );
 	findAction->setIcon( QIcon(":/icons/find.png") );
@@ -695,6 +750,12 @@ void MainWindow::createMenus() {
 //	fileMenu->addSeparator();
 //	fileMenu->addAction( closeAction );
 	
+	// Edit menu:
+	editMenu = menuBar()->addMenu( tr("&Edit") );
+	editMenu->addAction( undoAction );
+	editMenu->addAction( redoAction );
+	editMenu->addSeparator();
+	
 	// Find menu:
 	findMenu = menuBar()->addMenu( tr("Fin&d") );
 	findMenu->addAction( findAction );
@@ -719,6 +780,11 @@ void MainWindow::createToolBars() {
 	fileToolBar->addAction( openFileAction );
 	fileToolBar->addAction( saveFileAction );
 	fileToolBar->addAction( saveAsFileAction );
+	
+	// edit toolbar:
+	editToolBar = addToolBar( tr("&Edit") );
+	editToolBar->addAction( undoAction );
+	editToolBar->addAction( redoAction );
 	
 	// find toolbar:
 	findToolBar = addToolBar( tr("Find" ) );

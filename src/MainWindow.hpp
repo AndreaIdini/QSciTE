@@ -32,6 +32,9 @@ public slots:
 	void saveAsFile( EditorPtr = EditorPtr() );
 	void closeFile( int );
 	
+	void undo( );
+	void redo( );
+	
 	void find( );
 	void findNext( );
 	void findPrevious( );
@@ -85,10 +88,12 @@ private:
 	
 	// Menus:
 	QMenu *fileMenu;
+	QMenu *editMenu;
 	QMenu *findMenu;
 	
 	// ToolBars:
 	QToolBar *fileToolBar;
+	QToolBar *editToolBar;
 	QToolBar *findToolBar;
 	
 	// Actions:
@@ -96,6 +101,9 @@ private:
 	QAction *openFileAction;
 	QAction *saveFileAction;
 	QAction *saveAsFileAction;
+	
+	QAction *undoAction;
+	QAction *redoAction;
 	
 	QAction *findAction;
 	QAction *findNextAction;
