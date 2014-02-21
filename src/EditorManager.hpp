@@ -35,6 +35,14 @@ public:
 	
 	EditorPtr getEditor( ScintillaEditPtr );
 	EditorPtr getEditor( ScintillaEdit * );
+	EditorPtr getEditorForFile( QString );
+	const std::vector< EditorPtr > &getEditors( );
+	
+	ScintillaEditPtr getWidget( EditorPtr );
+	
+	bool removeEditor( EditorPtr );
+	
+	bool areEditorsDirty( );
 
 };
 

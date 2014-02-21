@@ -28,14 +28,27 @@ public slots:
 	
 	void newFile( );
 	void openFile( QString fileName = "" );
+	void saveFile( EditorPtr = EditorPtr() );
+	void saveAsFile( EditorPtr = EditorPtr() );
 	void closeFile( int );
+	
+	void find( );
+	void findNext( );
+	void findPrevious( );
+	void replace( );
+	void replaceNext( );
 
 protected slots:
 	
 	void editorModified( bool );
 	//void styleNeeded( int );
 	
+	
 protected:
+	
+	void closeEvent( QCloseEvent *event );
+	void dragEnterEvent( QDragEnterEvent *event );
+	void dropEvent( QDropEvent *event );
 	
 private slots:
 	
@@ -45,6 +58,7 @@ private:
 	// --== methods ==--
 	void setupEditor( ScintillaEditPtr );
 	void registerEditorListeners( ScintillaEditPtr );
+	void registerMainWindowActions();
 	
 	void createActions();
 	void createMenus();
@@ -54,6 +68,8 @@ private:
 	bool okToContinue();
 	void writeSettings();
 	void readSettings();
+	
+	int createColor( int, int, int );
 	
 	
 	// --== variables ==--
@@ -69,13 +85,24 @@ private:
 	
 	// Menus:
 	QMenu *fileMenu;
+	QMenu *findMenu;
 	
 	// ToolBars:
 	QToolBar *fileToolBar;
+	QToolBar *findToolBar;
 	
 	// Actions:
 	QAction *newFileAction;
 	QAction *openFileAction;
+	QAction *saveFileAction;
+	QAction *saveAsFileAction;
+	
+	QAction *findAction;
+	QAction *findNextAction;
+	QAction *findPreviousAction;
+	
+	QAction *replaceAction;
+	QAction *replaceNextAction;
 	
 };
 

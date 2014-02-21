@@ -25,6 +25,8 @@ private:
 
 	ScintillaEditPtr editor;
 	QFileInfo filePath;
+	
+	QPair<int, int> lastFound;
 
 public:
 	
@@ -35,10 +37,20 @@ public:
 	Editor( ScintillaEditPtr );
 	virtual ~Editor( );
 	
-	bool loadFile( std::string );
+	bool loadFile( QString );
 	bool loadFile( QFileInfo );
 	
+	bool saveFile( );
+	
+	void setFileName( QString );
+	void setFileName( QFileInfo );
 	QString getFileName( );
+	QString getFilePath( );
+	
+	// Find handling:
+	QPair<int, int> findNext( QString );
+	QPair<int, int> findPrevious( QString );
+	QPair<int, int> replaceNext( QString, QString );
 	
 	ScintillaEditPtr getScintillaEdit( );
 	
