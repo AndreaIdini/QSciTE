@@ -403,9 +403,9 @@ void MainWindow::find( ) {
 		ui.searchFrame->hide();
 	} else {
 		ui.searchFrame->show();
-		ui.searchField->activateWindow();
+		//ui.searchField->activateWindow();
 		ui.searchField->setFocus();
-		ui.searchField->grabKeyboard();
+		//ui.searchField->grabKeyboard();
 		ui.searchField->selectAll();
 	}
 }
@@ -460,9 +460,9 @@ void MainWindow::replace( ) {
 		ui.replaceFrame->hide();
 	} else {
 		ui.replaceFrame->show();
-		ui.replaceSearchField->activateWindow();
+		//ui.replaceSearchField->activateWindow();
 		ui.replaceSearchField->setFocus();
-		ui.replaceSearchField->grabKeyboard();
+		//ui.replaceSearchField->grabKeyboard();
 		ui.replaceSearchField->selectAll();
 	}
 }

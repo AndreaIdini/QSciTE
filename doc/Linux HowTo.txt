@@ -1,0 +1,12 @@
+Linux HowTo
+
+We need scintilla qt components compiled and placed in (project_folder)/3rdparty/scintilla.
+
+1. Download scintilla .tgz package from website.
+2. unpack to 3rdparty
+3. go to qt/ScintillaEdit folder and run: "python WidgetGen.py"
+   This will create ScintillaEdit.h and cpp
+4. open ScintillaEdit.pro in QT Creator
+5. Build release version of project.
+6. Done
+
