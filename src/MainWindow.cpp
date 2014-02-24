@@ -3,6 +3,23 @@
 #include <iostream>
 #include <SciLexer.h>
 
+const int base03 = 0 | (43 << 8) | (54 << 16);
+const int base02 = 7 | (54 << 8) | (66 << 16);
+const int base01 = 88 | (110 << 8) | (117 << 16);
+const int base00 = 101 | (123 << 8) | (131 << 16);
+const int base0 = 112 | (130 << 8) | (132 << 16);
+const int base1 = 129 | (144 << 8) | (144 << 16);
+const int base2 = 238 | (232 << 8) | (213 << 16);
+const int base3 = 253 | (246 << 8) | (227 << 16);
+const int yellow = 115 | (138 << 8) | (5 << 16);
+const int orange = 203 | (75 << 8) | (22 << 16);
+const int red = 220 | (50 << 8) | (47 << 16);
+const int magenta = 211 | (54 << 8) | (130 << 16);
+const int violet = 108 | (113 << 8) | (196 << 16);
+const int blue = 38 | (139 << 8) | (210 << 16);
+const int cyan = 33 | (118 << 8) | (199 << 16);
+const int green = 37 | (146 << 8) | (134 << 16);
+
 
 MainWindow::MainWindow( QApplication &app ) : QMainWindow(), windowModified(false) {
 	
@@ -525,6 +542,19 @@ void MainWindow::setupEditor( ScintillaEditPtr editor ) {
 	// Margins:
 	editor->setMarginTypeN( 1, 1 );
 	editor->setMarginWidthN( 1, 20 );
+
+	// Set up the global default style. These attributes
+	// are used wherever no explicit choices are made.
+	editor->styleSetFont( STYLE_DEFAULT, "DejaVu Sans" );
+	editor->styleSetSize( STYLE_DEFAULT, 11 );
+	editor->styleSetFore( STYLE_DEFAULT, base0 );
+	editor->styleSetBack( STYLE_DEFAULT, base3 );
+	
+	// Set caret foreground color
+	editor->setCaretFore( base0 );
+	
+	// Set selection color
+	editor->setSelBack( 1, base2 );
 }
 
 /**
@@ -620,9 +650,17 @@ void MainWindow::setupLexing( EditorPtr editor ) {
 		fileName.endsWith( ".cc", Qt::CaseInsensitive ) || fileName.endsWith( ".hh", Qt::CaseInsensitive ) ||
 		fileName.endsWith( ".c++", Qt::CaseInsensitive ) || fileName.endsWith( ".h++", Qt::CaseInsensitive ) ||
   		fileName.endsWith( ".cp", Qt::CaseInsensitive ) || fileName.endsWith( ".hp", Qt::CaseInsensitive ) ||
+		fileName.endsWith( ".ipp", Qt::CaseInsensitive ) || fileName.endsWith( ".m", Qt::CaseInsensitive ) ||
+		fileName.endsWith( ".mm", Qt::CaseInsensitive ) || fileName.endsWith( ".sma", Qt::CaseInsensitive ) ||
 		fileName.endsWith( ".cxx", Qt::CaseInsensitive ) || fileName.endsWith( ".hxx", Qt::CaseInsensitive ) ) {
 		language = SCLEX_CPP;
+	} else if(	fileName.endsWith( ".f", Qt::CaseInsensitive ) || fileName.endsWith( ".for", Qt::CaseInsensitive ) ||
+				fileName.endsWith( ".f90", Qt::CaseInsensitive ) || fileName.endsWith( ".f95", Qt::CaseInsensitive ) ||
+				fileName.endsWith( ".f2k", Qt::CaseInsensitive ) ) {
+		language = SCLEX_FORTRAN;
 	}
+	
+	
 	
 	switch( language ) {
 		case SCLEX_CPP:		{ setupCPPLexing( editor ); break; }
@@ -651,58 +689,72 @@ void MainWindow::setupCPPLexing( EditorPtr editor ) {
 	editorWidget->setTabWidth( 3 );
 	
 	// Use CPP keywords
-	QString keywords =	"asm auto bool break case catch char class const "
-						"const_cast continue default delete do double "
-						"dynamic_cast else enum explicit extern false finally "
-						"float for friend goto if inline int long mutable "
-						"namespace new operator private protected public "
-						"register reinterpret_cast register return short signed "
-						"sizeof static static_cast struct switch template "
-						"this throw true try typedef typeid typename "
-						"union unsigned using virtual void volatile "
-						"wchar_t while "
-						"__asm __asume __based __box __cdecl __declspec "
-						"__delegate delegate depreciated dllexport dllimport "
-						"event __event __except __fastcall __finally __forceinline "
-						"__int8 __int16 __int32 __int64 __int128 __interface "
-						"interface __leave naked noinline __noop noreturn "
-						"nothrow novtable nullptr safecast __stdcall "
-						"__try __except __finally __unaligned uuid __uuidof "
-						"__virtual_inheritance";
+	QString keywords = "and and_eq asm auto bitand bitor bool break \
+						case catch char class compl const const_cast continue \
+						default delete do double dynamic_cast else enum explicit export extern false float for \
+						friend goto if inline int long mutable namespace new not not_eq \
+						operator or or_eq private protected public \
+						register reinterpret_cast return short signed sizeof static static_cast struct switch \
+						template this throw true try typedef typeid typename union unsigned using \
+						virtual void volatile wchar_t while xor xor_eq\
+						@class @defs @protocol @required @optional @end \
+						@interface @public @package @protected @private @property \
+						@implementation @synthesize @dynamic \
+						@throw @try @catch @finally \
+						@synchronized @autoreleasepool \
+						@selector @encode \
+						@compatibility_alias";
 	editorWidget->setKeyWords( 0, keywords.toAscii() );
 	
-	// Set up the global default style. These attributes
-	// are used wherever no explicit choices are made.
-	editorWidget->styleSetFont( STYLE_DEFAULT, "Courier New" );
-	editorWidget->styleSetSize( STYLE_DEFAULT, 10 );
-	editorWidget->styleSetFore( STYLE_DEFAULT, createColor( 100, 100, 100 ) );
-	editorWidget->styleSetBack( STYLE_DEFAULT, createColor( 255, 255, 255 ) );
+	keywords = 'a addindex addtogroup anchor arg attention \
+				author b brief bug c class code date def defgroup deprecated dontinclude \
+				e em endcode endhtmlonly endif endlatexonly endlink endverbatim enum example exception \
+				f$ f[ f] file fn hideinitializer htmlinclude htmlonly \
+				if image include ingroup internal invariant interface latexonly li line link \
+				mainpage name namespace nosubgrouping note overload \
+				p page par param param[in] param[out] \
+				post pre ref relates remarks return retval \
+				sa section see showinitializer since skip skipline struct subsection \
+				test throw throws todo typedef union until \
+				var verbatim verbinclude version warning weakgroup $ @ \ & < > # { }';
+	editorWidget->setKeyWords( 3, keywords.toAscii() );
 	
 	// Set caret foreground color
-	editorWidget->setCaretFore( createColor( 100, 100, 100 ) );
+	editorWidget->setCaretFore( base0 );
 	
 	// Set all styles
 	editorWidget->styleClearAll();
 	
 	// Set selection color
-	editorWidget->setSelBack( 1, createColor( 10, 10, 100 ) );
+	editorWidget->setSelBack( 1, base2 );
 	
 	// Set syntax colors
-	int red = createColor( 200, 10, 10 );
-	int green = createColor( 10, 200, 10 );
-	int yellow = createColor( 200, 200, 10 );
-	int magenta = createColor( 200, 10, 200 );
-	int cyan = createColor( 10, 200, 200 );
-	editorWidget->styleSetFore( SCE_C_COMMENT,		green );
-	editorWidget->styleSetFore( SCE_C_COMMENTLINE,	green );
-	editorWidget->styleSetFore( SCE_C_COMMENTDOC,	green );
-	editorWidget->styleSetFore( SCE_C_NUMBER,		magenta );
-	editorWidget->styleSetFore( SCE_C_STRING,		yellow );
-	editorWidget->styleSetFore( SCE_C_CHARACTER,	yellow );
-	editorWidget->styleSetFore( SCE_C_UUID,			cyan );
-	editorWidget->styleSetFore( SCE_C_OPERATOR,		red );
-	editorWidget->styleSetFore( SCE_C_PREPROCESSOR,	cyan );
-	editorWidget->styleSetFore( SCE_C_WORD,			cyan );
+	editorWidget->styleSetFore( SCE_C_DEFAULT,					base0 );
+	editorWidget->styleSetFore( SCE_C_COMMENT,					base1 );
+	editorWidget->styleSetFore( SCE_C_COMMENTLINE,				base1 );
+	editorWidget->styleSetFore( SCE_C_COMMENTDOC,				base1 );
+	editorWidget->styleSetFore( SCE_C_NUMBER,					green );
+	editorWidget->styleSetFore( SCE_C_WORD,						yellow );
+	editorWidget->styleSetFore( SCE_C_STRING,					green );
+	editorWidget->styleSetFore( SCE_C_CHARACTER,				green );
+	editorWidget->styleSetFore( SCE_C_UUID,						cyan );
+	editorWidget->styleSetFore( SCE_C_PREPROCESSOR,				red );
+	editorWidget->styleSetFore( SCE_C_OPERATOR,					base0 );
+	editorWidget->styleSetFore( SCE_C_IDENTIFIER,				blue );
+	editorWidget->styleSetFore( SCE_C_STRINGEOL,				base0 );
+	editorWidget->styleSetFore( SCE_C_VERBATIM,					green );
+	editorWidget->styleSetFore( SCE_C_REGEX,					red );
+	editorWidget->styleSetFore( SCE_C_COMMENTLINEDOC,			base1 );
+	editorWidget->styleSetFore( SCE_C_WORD2,					green );
+	editorWidget->styleSetFore( SCE_C_COMMENTDOCKEYWORD,		red );
+	editorWidget->styleSetFore( SCE_C_COMMENTDOCKEYWORDERROR,	red );
+	editorWidget->styleSetFore( SCE_C_GLOBALCLASS,				yellow );
+	editorWidget->styleSetFore( SCE_C_STRINGRAW,				green );
+	editorWidget->styleSetFore( SCE_C_TRIPLEVERBATIM,			green );
+	editorWidget->styleSetFore( SCE_C_HASHQUOTEDSTRING,			red );
+	editorWidget->styleSetFore( SCE_C_PREPROCESSORCOMMENT,		base1 );
+	editorWidget->styleSetFore( SCE_C_PREPROCESSORCOMMENTDOC,	base1 );
+	editorWidget->styleSetFore( SCE_C_USERLITERAL,				green );
 	
 	// set margin style:
 	editorWidget->setMarginWidthN( 2, 16 );
@@ -711,7 +763,7 @@ void MainWindow::setupCPPLexing( EditorPtr editor ) {
 	//editorWidget->setAutomaticFold( SC_AUTOMATICFOLD_SHOW & SC_AUTOMATICFOLD_CLICK & SC_AUTOMATICFOLD_CHANGE );
 	editorWidget->setAutomaticFold( SC_AUTOMATICFOLD_CLICK );
 	
-	editorWidget->setFoldMarginColour( true, createColor(240, 240, 240) );
+	editorWidget->setFoldMarginColour( true, base3 );
 	
 	// set of markers to use for folding:
 	editorWidget->markerDefine( SC_MARKNUM_FOLDEROPEN, SC_MARK_BOXMINUS );
@@ -753,8 +805,131 @@ void MainWindow::setupCPPLexing( EditorPtr editor ) {
  * MainWindow::setupFortranLexing
  * @author: jhenriques 2014
  */
-void MainWindow::setupFortranLexing( EditorPtr ) {
+void MainWindow::setupFortranLexing( EditorPtr editor ) {
 	
+	ScintillaEditPtr editorWidget = editor->getScintillaEdit();
+	
+	// CPP lexer
+	editorWidget->setLexer( SCLEX_FORTRAN );
+	
+	// Set tab width
+	editorWidget->setTabWidth( 3 );
+	
+	// Use CPP keywords
+	QString keywords =	"access action advance allocatable allocate \
+	apostrophe assign assignment associate asynchronous backspace \
+	bind blank blockdata call case character class close common \
+	complex contains continue cycle data deallocate decimal delim \
+	default dimension direct do dowhile double doubleprecision else \
+	elseif elsewhere encoding end endassociate endblockdata enddo \
+	endfile endforall endfunction endif endinterface endmodule endprogram \
+	endselect endsubroutine endtype endwhere entry eor equivalence \
+	err errmsg exist exit external file flush fmt forall form format \
+	formatted function go goto id if implicit in include inout \
+	integer inquire intent interface intrinsic iomsg iolength \
+	iostat kind len logical module name named namelist nextrec nml \
+	none nullify number only open opened operator optional out pad \
+	parameter pass pause pending pointer pos position precision \
+	print private program protected public quote read readwrite \
+	real rec recl recursive result return rewind save select \
+	selectcase selecttype sequential sign size stat status stop stream \
+	subroutine target then to type unformatted unit use value \
+	volatile wait where while write";
+	editorWidget->setKeyWords( 0, keywords.toAscii() );
+	
+	keywords = "abs achar acos acosd adjustl adjustr \
+	aimag aimax0 aimin0 aint ajmax0 ajmin0 akmax0 akmin0 all allocated alog \
+	alog10 amax0 amax1 amin0 amin1 amod anint any asin asind associated \
+	atan atan2 atan2d atand bitest bitl bitlr bitrl bjtest bit_size bktest break \
+	btest cabs ccos cdabs cdcos cdexp cdlog cdsin cdsqrt ceiling cexp char \
+	clog cmplx conjg cos cosd cosh count cpu_time cshift csin csqrt dabs \
+	dacos dacosd dasin dasind datan datan2 datan2d datand date \
+	date_and_time dble dcmplx dconjg dcos dcosd dcosh dcotan ddim dexp \
+	dfloat dflotk dfloti dflotj digits dim dimag dint dlog dlog10 dmax1 dmin1 \
+	dmod dnint dot_product dprod dreal dsign dsin dsind dsinh dsqrt dtan dtand \
+	dtanh eoshift epsilon errsns exp exponent float floati floatj floatk floor fraction \
+	free huge iabs iachar iand ibclr ibits ibset ichar idate idim idint idnint ieor ifix \
+	iiabs iiand iibclr iibits iibset iidim iidint iidnnt iieor iifix iint iior iiqint iiqnnt iishft \
+	iishftc iisign ilen imax0 imax1 imin0 imin1 imod index inint inot int int1 int2 int4 \
+	int8 iqint iqnint ior ishft ishftc isign isnan izext jiand jibclr jibits jibset jidim jidint \
+	jidnnt jieor jifix jint jior jiqint jiqnnt jishft jishftc jisign jmax0 jmax1 jmin0 jmin1 \
+	jmod jnint jnot jzext kiabs kiand kibclr kibits kibset kidim kidint kidnnt kieor kifix \
+	kind kint kior kishft kishftc kisign kmax0 kmax1 kmin0 kmin1 kmod knint knot kzext \
+	lbound leadz len len_trim lenlge lge lgt lle llt log log10 logical lshift malloc matmul \
+	max max0 max1 maxexponent maxloc maxval merge min min0 min1 minexponent minloc \
+	minval mod modulo mvbits nearest nint not nworkers number_of_processors pack popcnt \
+	poppar precision present product radix random random_number random_seed range real \
+	repeat reshape rrspacing rshift scale scan secnds selected_int_kind \
+	selected_real_kind set_exponent shape sign sin sind sinh size sizeof sngl snglq spacing \
+	spread sqrt sum system_clock tan tand tanh tiny transfer transpose trim ubound unpack verify";
+	editorWidget->setKeyWords( 2, keywords.toAscii() );
+	
+	keywords = "cdabs cdcos cdexp cdlog cdsin cdsqrt cotan cotand \
+	dcmplx dconjg dcotan dcotand decode dimag dll_export dll_import doublecomplex dreal \
+	dvchk encode find flen flush getarg getcharqq getcl getdat getenv gettim hfix ibchng \
+	identifier imag int1 int2 int4 intc intrup invalop iostat_msg isha ishc ishl jfix \
+	lacfar locking locnear map nargs nbreak ndperr ndpexc offset ovefl peekcharqq precfill \
+	prompt qabs qacos qacosd qasin qasind qatan qatand qatan2 qcmplx qconjg qcos qcosd \
+	qcosh qdim qexp qext qextd qfloat qimag qlog qlog10 qmax1 qmin1 qmod qreal qsign qsin \
+	qsind qsinh qsqrt qtan qtand qtanh ran rand randu rewrite segment setdat settim system \
+	timer undfl unlock union val virtual volatile zabs zcos zexp zlog zsin zsqrt";
+	editorWidget->setKeyWords( 3, keywords.toAscii() );
+	
+	// Set all styles
+	editorWidget->styleClearAll();
+	
+	// Set syntax colors
+	editorWidget->styleSetFore( SCE_F_DEFAULT,		base0 );
+	editorWidget->styleSetFore( SCE_F_COMMENT,		base1 );
+	editorWidget->styleSetFore( SCE_F_NUMBER,		green );
+	editorWidget->styleSetFore( SCE_F_STRING1,		green );
+	editorWidget->styleSetFore( SCE_F_STRING2,		green );
+	editorWidget->styleSetFore( SCE_F_STRINGEOL,	green );
+	editorWidget->styleSetFore( SCE_F_OPERATOR,		base0 );
+	editorWidget->styleSetFore( SCE_F_IDENTIFIER,	red );
+	editorWidget->styleSetFore( SCE_F_WORD,			yellow );
+	editorWidget->styleSetFore( SCE_F_WORD2,		yellow );
+	editorWidget->styleSetFore( SCE_F_WORD3,		yellow );
+	editorWidget->styleSetFore( SCE_F_PREPROCESSOR,	red );
+	editorWidget->styleSetFore( SCE_F_OPERATOR2,	base0 );
+	editorWidget->styleSetFore( SCE_F_LABEL,		green );
+	editorWidget->styleSetFore( SCE_F_CONTINUATION,	red );
+	
+	// set margin style:
+	editorWidget->setMarginWidthN( 2, 16 );
+	editorWidget->setMarginMaskN( 2, SC_MASK_FOLDERS );
+	editorWidget->setMarginSensitiveN( 2, true );
+	//editorWidget->setAutomaticFold( SC_AUTOMATICFOLD_SHOW & SC_AUTOMATICFOLD_CLICK & SC_AUTOMATICFOLD_CHANGE );
+	editorWidget->setAutomaticFold( SC_AUTOMATICFOLD_CLICK );
+	
+	editorWidget->setFoldMarginColour( true, base3 );
+	
+	// set of markers to use for folding:
+	editorWidget->markerDefine( SC_MARKNUM_FOLDEROPEN, SC_MARK_BOXMINUS );
+	editorWidget->markerDefine( SC_MARKNUM_FOLDER, SC_MARK_BOXPLUS );
+	editorWidget->markerDefine( SC_MARKNUM_FOLDERSUB, SC_MARK_VLINE );
+	editorWidget->markerDefine( SC_MARKNUM_FOLDERTAIL, SC_MARK_LCORNER );
+	editorWidget->markerDefine( SC_MARKNUM_FOLDEREND, SC_MARK_BOXPLUSCONNECTED );
+	editorWidget->markerDefine( SC_MARKNUM_FOLDEROPENMID, SC_MARK_BOXMINUSCONNECTED );
+	editorWidget->markerDefine( SC_MARKNUM_FOLDERMIDTAIL, SC_MARK_TCORNER );
+	
+	// colors:
+	editorWidget->markerSetFore( SC_MARKNUM_FOLDER, createColor(200, 200, 210) );
+	editorWidget->markerSetBack( SC_MARKNUM_FOLDER, createColor(100, 100, 100) );
+	editorWidget->markerSetFore( SC_MARKNUM_FOLDEROPEN, createColor(200, 200, 210) );
+	editorWidget->markerSetBack( SC_MARKNUM_FOLDEROPEN, createColor(100, 100, 100) );
+	editorWidget->markerSetBack( SC_MARKNUM_FOLDERSUB, createColor(200, 200, 200) );
+	editorWidget->markerSetBack( SC_MARKNUM_FOLDERTAIL, createColor(200, 200, 200) );
+	editorWidget->markerSetFore( SC_MARKNUM_FOLDEREND, createColor(200, 200, 210) );
+	editorWidget->markerSetBack( SC_MARKNUM_FOLDEREND, createColor(100, 100, 100) );
+	editorWidget->markerSetFore( SC_MARKNUM_FOLDEROPENMID, createColor(200, 200, 210) );
+	editorWidget->markerSetBack( SC_MARKNUM_FOLDEROPENMID, createColor(100, 100, 100) );
+	editorWidget->markerSetBack( SC_MARKNUM_FOLDERTAIL, createColor(200, 200, 200) );
+	editorWidget->markerSetBack( SC_MARKNUM_FOLDERMIDTAIL, createColor(200, 200, 200) );
+	
+	// lexer folding configuration:
+	editorWidget->setProperty( "fold.comment.fortran", "1" );
+	editorWidget->setProperty( "fold.quotes.fortran", "1" );
 }
 
 /**

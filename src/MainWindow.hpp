@@ -51,7 +51,7 @@ public slots:
 	
 protected slots:
 	
-	void editorModified( bool );	
+	void editorModified( bool );
 	
 protected:
 	
