@@ -82,31 +82,6 @@ MainWindow::~MainWindow() {
  */
 void MainWindow::initialize( ) {
 	
-//	// TODO
-//	
-//	ScintillaDocument *pDoc = sciEditor->get_doc();
-//
-//	sciEditor->addText( 14, "Jose Henriques" );
-//
-//	//sciEditor->setLexer( SCLEX_CPP );
-//	
-//	QByteArray buffer = sciEditor->getText( pDoc->length() );
-//	std::cout << "Current Text: " << QString( buffer ).toStdString() << std::endl;
-//	
-//	
-//	//create a new document:
-////	ScintillaDocument *pDoc2 = new ScintillaDocument( );
-////	sciEditor->setDocPointer( pDoc2 );
-//	
-//	sptr_t newDoc = sciEditor->createDocument( );
-//	sciEditor->setDocPointer( newDoc );
-//	
-//	ScintillaDocument *pDoc2 = sciEditor->get_doc();
-//	
-//	sciEditor->addText( 6, "Amaral" );
-//	buffer = sciEditor->getText( pDoc2->length( ) );
-//	std::cout << "Current Text 2: " << QString( buffer ).toStdString() << std::endl;
-
 }
 
 /**
@@ -253,8 +228,19 @@ void MainWindow::saveFile( EditorPtr editor ) {
 	
 	// If called with no editor get the current activate editor:
 	if( !editor ) {
-		// get current editor:
-		editor = editorManager->getEditor( (ScintillaEdit *) ui.tabBarLeft->currentWidget() );
+		
+		// find out what is the active splitter if any. default is LEFT_SPLITTER:
+		splitter active = getCurrentSplitter( );
+		switch( active ) {
+			case LEFT_SPLITTER: {
+				editor = editorManager->getEditor( (ScintillaEdit *) ui.tabBarLeft->currentWidget() );
+				break;
+			}
+			case RIGHT_SPLITTER: {
+				editor = editorManager->getEditor( (ScintillaEdit *) ui.tabBarRight->currentWidget() );
+				break;
+			}
+		}
 	}
 	
 	if( editor ) {
@@ -277,8 +263,19 @@ void MainWindow::saveAsFile( EditorPtr editor ) {
 
 	// If called with no editor get the current activate editor:
 	if( !editor ) {
-		// get current editor:
-		editor = editorManager->getEditor( (ScintillaEdit *) ui.tabBarLeft->currentWidget() );
+		
+		// find out what is the active splitter if any. default is LEFT_SPLITTER:
+		splitter active = getCurrentSplitter( );
+		switch( active ) {
+			case LEFT_SPLITTER: {
+				editor = editorManager->getEditor( (ScintillaEdit *) ui.tabBarLeft->currentWidget() );
+				break;
+			}
+			case RIGHT_SPLITTER: {
+				editor = editorManager->getEditor( (ScintillaEdit *) ui.tabBarRight->currentWidget() );
+				break;
+			}
+		}
 	}
 	
 	if( editor ) {
@@ -297,6 +294,7 @@ void MainWindow::saveAsFile( EditorPtr editor ) {
 			
 			editor->setFile( filename );
 			editor->saveFile();
+			
 		} else {
 			
 			int res = QMessageBox::warning( this, tr("QSciTE"), tr("WARNING: Changes in untitled buffer will be lost!\nContinue?"),
@@ -315,8 +313,24 @@ void MainWindow::saveAsFile( EditorPtr editor ) {
  */
 void MainWindow::closeFile( int index ) {
 	
+	EditorPtr editor;
+	
 	// get current editor:
-	EditorPtr editor = editorManager->getEditor( (ScintillaEdit *) ui.tabBarLeft->currentWidget() );
+	splitter active = getCurrentSplitter( );
+	switch( active ) {
+		case LEFT_SPLITTER: {
+			editor = editorManager->getEditor( (ScintillaEdit *) ui.tabBarLeft->currentWidget() );
+			break;
+		}
+		case RIGHT_SPLITTER: {
+			editor = editorManager->getEditor( (ScintillaEdit *) ui.tabBarRight->currentWidget() );
+			break;
+		}
+	}
+	
+	if( !editor ) {
+		return;
+	}
 	
 	if( editor->isDirty ) {
 		int res = QMessageBox::warning( this, tr("QSciTE"), tr("This session has been modified.\n Do you want to save your changes?"),
@@ -340,7 +354,18 @@ void MainWindow::closeFile( int index ) {
 void MainWindow::undo( ) {
 	
 	// get current editor:
-	ScintillaEdit *editor = (ScintillaEdit *) ui.tabBarLeft->currentWidget();
+	ScintillaEdit *editor;
+	splitter active = getCurrentSplitter( );
+	switch( active ) {
+		case LEFT_SPLITTER: {
+			editor = (ScintillaEdit *) ui.tabBarLeft->currentWidget();
+			break;
+		}
+		case RIGHT_SPLITTER: {
+			editor = (ScintillaEdit *) ui.tabBarRight->currentWidget();
+			break;
+		}
+	}
 	
 	if( editor && editor->canUndo() ) {
 		editor->undo();
@@ -357,7 +382,18 @@ void MainWindow::undo( ) {
 void MainWindow::redo( ) {
 
 	// get current editor:
-	ScintillaEdit *editor = (ScintillaEdit *) ui.tabBarLeft->currentWidget();
+	ScintillaEdit *editor;
+	splitter active = getCurrentSplitter( );
+	switch( active ) {
+		case LEFT_SPLITTER: {
+			editor = (ScintillaEdit *) ui.tabBarLeft->currentWidget();
+			break;
+		}
+		case RIGHT_SPLITTER: {
+			editor = (ScintillaEdit *) ui.tabBarRight->currentWidget();
+			break;
+		}
+	}
 
 	if( editor && editor->canRedo() ) {
 		editor->redo();
@@ -386,9 +422,7 @@ void MainWindow::find( ) {
 		ui.searchFrame->hide();
 	} else {
 		ui.searchFrame->show();
-		//ui.searchField->activateWindow();
 		ui.searchField->setFocus();
-		//ui.searchField->grabKeyboard();
 		ui.searchField->selectAll();
 	}
 }
@@ -402,14 +436,31 @@ void MainWindow::findNext( ) {
 	
 	QString searchString = ui.searchField->text();
 	
-	EditorPtr editor = editorManager->getEditor( (ScintillaEdit *) ui.tabBarLeft->currentWidget() );
-	QPair<int, int> found = editor->findNext( searchString );
+	EditorPtr editor;
+	splitter active = getCurrentSplitter( );
+	switch( active ) {
+		case LEFT_SPLITTER: {
+			editor = editorManager->getEditor( (ScintillaEdit *) ui.tabBarLeft->currentWidget() );
+			break;
+		}
+		case RIGHT_SPLITTER: {
+			editor = editorManager->getEditor( (ScintillaEdit *) ui.tabBarRight->currentWidget() );
+			break;
+		}
+	}
 	
-	//std::cout << "Find Next: " << searchString.toStdString() << ". <" << found.first << ", " << found.second << ">" << std::endl;
+	if( editor ) {
+		
+		QPair<int, int> found = editor->findNext( searchString );
+		
+		if( found.first == -1 ) {
+			ui.statusbar->showMessage( tr("Reached end of document. Will loop with next find."), 3000 );
+		}
+	}
 }
 
 /**
- * MainWindow::findNext
+ * MainWindow::findPrevious
  *
  * @author: jhenriques 2014
  */
@@ -417,10 +468,27 @@ void MainWindow::findPrevious( ) {
 
 	QString searchString = ui.searchField->text();
 	
-	EditorPtr editor = editorManager->getEditor( (ScintillaEdit *) ui.tabBarLeft->currentWidget() );
-	QPair<int, int> found = editor->findPrevious( searchString );
+	EditorPtr editor;
+	splitter active = getCurrentSplitter( );
+	switch( active ) {
+		case LEFT_SPLITTER: {
+			editor = editorManager->getEditor( (ScintillaEdit *) ui.tabBarLeft->currentWidget() );
+			break;
+		}
+		case RIGHT_SPLITTER: {
+			editor = editorManager->getEditor( (ScintillaEdit *) ui.tabBarRight->currentWidget() );
+			break;
+		}
+	}
 	
-	//std::cout << "Find Previous: " << searchString.toStdString() << ". <" << found.first << ", " << found.second << ">" << std::endl;
+	if( editor ) {
+		
+		QPair<int, int> found = editor->findPrevious( searchString );
+		
+		if( found.first == -1 ) {
+			ui.statusbar->showMessage( tr("Reached end of document. Will loop with next find."), 3000 );
+		}
+	}
 }
 
 /**
@@ -443,9 +511,7 @@ void MainWindow::replace( ) {
 		ui.replaceFrame->hide();
 	} else {
 		ui.replaceFrame->show();
-		//ui.replaceSearchField->activateWindow();
 		ui.replaceSearchField->setFocus();
-		//ui.replaceSearchField->grabKeyboard();
 		ui.replaceSearchField->selectAll();
 	}
 }
@@ -459,8 +525,27 @@ void MainWindow::replaceNext( ) {
 	QString searchString = ui.replaceSearchField->text();
 	QString replaceString = ui.replaceField->text();
 	
-	EditorPtr editor = editorManager->getEditor( (ScintillaEdit *) ui.tabBarLeft->currentWidget() );
-	editor->replaceNext( searchString, replaceString );
+	EditorPtr editor;
+	splitter active = getCurrentSplitter( );
+	switch( active ) {
+		case LEFT_SPLITTER: {
+			editor = editorManager->getEditor( (ScintillaEdit *) ui.tabBarLeft->currentWidget() );
+			break;
+		}
+		case RIGHT_SPLITTER: {
+			editor = editorManager->getEditor( (ScintillaEdit *) ui.tabBarRight->currentWidget() );
+			break;
+		}
+	}
+
+	if( editor) {
+		
+		QPair<int, int> found = editor->replaceNext( searchString, replaceString );
+		
+		if( found.first == -1 ) {
+			ui.statusbar->showMessage( tr("Reached end of document. Will loop with next find."), 3000 );
+		}
+	}
 }
 
 /**

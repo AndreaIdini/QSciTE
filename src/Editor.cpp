@@ -138,14 +138,17 @@ QPair<int, int> Editor::findNext( QString searchString ) {
 	
 	int docLength = editor->get_doc()->length();
 	
-	QPair<int, int> found = editor->find_text( 0, searchString.toStdString().data(), lastFound.second, docLength );
+	lastFound = editor->find_text( 0, searchString.toStdString().data(), lastFound.second, docLength );
 	
-	if( found.first != -1 ) {
+	if( lastFound.first != -1 ) {
 		
-		editor->setSelectionStart( found.first );
-		editor->setSelectionEnd( found.second );
+		editor->setSelectionStart( lastFound.first );
+		editor->setSelectionEnd( lastFound.second );
 		
-		lastFound = found;
+	} else {
+		
+		// allow the find to loop:
+		lastFound.second = 0;
 	}
 	
 	return lastFound;
@@ -157,16 +160,17 @@ QPair<int, int> Editor::findNext( QString searchString ) {
  */
 QPair<int, int> Editor::findPrevious( QString searchString ) {
 	
-	//int docLength = editor->get_doc()->length();
+	lastFound = editor->find_text( 0, searchString.toStdString().data(), lastFound.first, 0 );
 	
-	QPair<int, int> found = editor->find_text( 0, searchString.toStdString().data(), lastFound.first, 0 );
-	
-	if( found.first != -1 ) {
+	if( lastFound.first != -1 ) {
 		
-		editor->setSelectionStart( found.first );
-		editor->setSelectionEnd( found.second );
+		editor->setSelectionStart( lastFound.first );
+		editor->setSelectionEnd( lastFound.second );
+	} else {
 		
-		lastFound = found;
+		// allow the find to loop:
+		lastFound.first = editor->get_doc()->length();
+		return QPair<int, int>( -1, 0);
 	}
 	
 	return lastFound;
@@ -180,20 +184,21 @@ QPair<int, int> Editor::replaceNext( QString search, QString replace ) {
 	
 	int docLength = editor->get_doc()->length();
 	
-	QPair<int, int> found = editor->find_text( 0, search.toStdString().data(), lastFound.second, docLength );
+	lastFound = editor->find_text( 0, search.toStdString().data(), lastFound.second, docLength );
 	
-	if( found.first != -1 ) {
-		lastFound = found;
+	if( lastFound.first != -1 ) {
+		
+		editor->setTargetStart( lastFound.first );
+		editor->setTargetEnd( lastFound.second );
+		editor->replaceTarget( replace.length(), replace.toStdString().data() );
+		
+		editor->setSelectionStart( lastFound.first );
+		editor->setSelectionEnd( lastFound.first + replace.length() );
 	} else {
-		return found;
+		
+		// allow for looping:
+		lastFound.second = 0;
 	}
-	
-	editor->setTargetStart( found.first );
-	editor->setTargetEnd( found.second );
-	editor->replaceTarget( replace.length(), replace.toStdString().data() );
-
-	editor->setSelectionStart( found.first );
-	editor->setSelectionEnd( found.first + replace.length() );
 	
 	return lastFound;
 }
