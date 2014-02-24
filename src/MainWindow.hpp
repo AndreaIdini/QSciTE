@@ -10,6 +10,10 @@
 #include "EditorManager.hpp"
 
 
+typedef enum { LEFT_SPLITTER, RIGHT_SPLITTER } splitter;
+typedef enum { SINGLE, DOUBLE_H, DOUBLE_V } splitterConfig;
+
+
 class MainWindow : public QMainWindow {
 
 	Q_OBJECT
@@ -41,6 +45,10 @@ public slots:
 	void replace( );
 	void replaceNext( );
 
+	void setSingleSplitter( );
+	void setDoubleHSplitter( );
+	void setDoubleVSplitter( );
+	
 protected slots:
 	
 	void editorModified( bool );
@@ -49,9 +57,16 @@ protected slots:
 	
 protected:
 	
+	void setupLexing( EditorPtr );
+	void setupCPPLexing( EditorPtr );
+	void setupFortranLexing( EditorPtr );
+	
 	void closeEvent( QCloseEvent *event );
 	void dragEnterEvent( QDragEnterEvent *event );
 	void dropEvent( QDropEvent *event );
+	
+	void moveTab( QWidget *toMove, QTabWidget *from, QTabWidget *to );
+	splitter getCurrentSplitter( );
 	
 private slots:
 	
@@ -86,10 +101,13 @@ private:
 	
 	QByteArray savedGeometry;
 	
+	splitterConfig currentSplitterConf;
+	
 	// Menus:
 	QMenu *fileMenu;
 	QMenu *editMenu;
 	QMenu *findMenu;
+	QMenu *viewMenu;
 	
 	// ToolBars:
 	QToolBar *fileToolBar;
@@ -108,9 +126,12 @@ private:
 	QAction *findAction;
 	QAction *findNextAction;
 	QAction *findPreviousAction;
-	
 	QAction *replaceAction;
 	QAction *replaceNextAction;
+	
+	QAction *singleSplitterAction;
+	QAction *doubleHorizontalSplitterAction;
+	QAction *doubleVerticalSplitterAction;
 	
 };
 

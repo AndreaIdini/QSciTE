@@ -4,45 +4,25 @@
 #include <SciLexer.h>
 
 
-// TEMP:::
-
-// C++ keywords
-static const char g_cppKeyWords[] =		// Standard
-										"asm auto bool break case catch char class const "
-										"const_cast continue default delete do double "
-										"dynamic_cast else enum explicit extern false finally "
-										"float for friend goto if inline int long mutable "
-										"namespace new operator private protected public "
-										"register reinterpret_cast register return short signed "
-										"sizeof static static_cast struct switch template "
-										"this throw true try typedef typeid typename "
-										"union unsigned using virtual void volatile "
-										"wchar_t while "
-
-										// Extended
-										"__asm __asume __based __box __cdecl __declspec "
-										"__delegate delegate depreciated dllexport dllimport "
-										"event __event __except __fastcall __finally __forceinline "
-										"__int8 __int16 __int32 __int64 __int128 __interface "
-										"interface __leave naked noinline __noop noreturn "
-										"nothrow novtable nullptr safecast __stdcall "
-										"__try __except __finally __unaligned uuid __uuidof "
-										"__virtual_inheritance";
-
-
 MainWindow::MainWindow( QApplication &app ) : QMainWindow(), windowModified(false) {
 	
 	// read ui:
 	ui.setupUi( this );
 	
-	// create and set the scintilla editor as main widget:
-//	sciEditor = boost::shared_ptr< ScintillaEdit >( new ScintillaEdit( this ) );
-//	sciEditor->hide();
-	
 	// refine ui:
-	ui.tabBar->clear();
-	connect( ui.tabBar, SIGNAL(tabCloseRequested(int)), this, SLOT(closeFile(int)) );
 	
+	// init tabBarLefts:
+	ui.tabBarLeft->clear();
+	connect( ui.tabBarLeft, SIGNAL(tabCloseRequested(int)), this, SLOT(closeFile(int)) );
+	
+	// init tabBarRight:
+	ui.tabBarRight->clear();
+	connect( ui.tabBarRight, SIGNAL(tabCloseRequested(int)), this, SLOT(closeFile(int)) );
+	ui.tabBarRight->hide();
+	
+	currentSplitterConf = SINGLE;
+	
+	// Find/Replace config:
 	ui.searchFrame->hide();
 	connect( ui.nextButton, SIGNAL(clicked()), this, SLOT(findNext()) );
 	connect( ui.previousButton, SIGNAL(clicked()), this, SLOT(findPrevious()) );
@@ -127,11 +107,26 @@ void MainWindow::newFile( ) {
 		
 		setupEditor( editorWidget );
 		registerEditorListeners( editorWidget );
+		
+		// find out what is the active splitter if any. default is LEFT_SPLITTER:
+		splitter active = getCurrentSplitter( );
+		
+		switch( active ) {
+			case LEFT_SPLITTER: {
 				
-		// create new tab entry:
-		int index = ui.tabBar->addTab( editorWidget.get(), tr("untitled") );
-		ui.tabBar->setCurrentIndex( index );
-		editorWidget->grabFocus();
+				int index = ui.tabBarLeft->addTab( editorWidget.get(), tr("untitled") );
+				ui.tabBarLeft->setCurrentIndex( index );
+				editorWidget->grabFocus();
+				break;
+			}
+			case RIGHT_SPLITTER: {
+				
+				int index = ui.tabBarRight->addTab( editorWidget.get(), tr("untitled") );
+				ui.tabBarRight->setCurrentIndex( index );
+				editorWidget->grabFocus();
+				break;
+			}
+		}
 	}
 }
 
@@ -147,29 +142,54 @@ void MainWindow::openFile( QString fileName ) {
 		fileName = QFileDialog::getOpenFileName( this, tr("Open file"), settings.value( "path/load", "." ).toString() );
 	
 	if( !fileName.isEmpty() ) {
-		
-		// detect file extension:
-		int language = SCLEX_NULL;
-		if( fileName.endsWith( ".cpp", Qt::CaseInsensitive ) || fileName.endsWith( ".hpp", Qt::CaseInsensitive ) ) {
-			language = SCLEX_CPP;
-		}
 	
 		// must check if we already have editor open for this file:
 		EditorPtr existingEditor = editorManager->getEditorForFile( fileName );
 		if( existingEditor ) {
 			
+			// we will move focus to open editor if they are on the same splitter
+			// and if not, we will open a new editor and share the scintilla document:
+			splitter active = getCurrentSplitter( );
+			QTabWidget *currentTabBar = ( active == LEFT_SPLITTER ? ui.tabBarLeft : ui.tabBarRight );
+			
 			// move focus to editor:
 			ScintillaEditPtr widget = editorManager->getWidget( existingEditor );
 			if( widget ) {
-				ui.tabBar->setCurrentWidget( widget.get( ) );
-				widget->grabFocus();
+				
+				QTabWidget *tabBar = (QTabWidget *) widget->parentWidget()->parentWidget();
+				
+				// case when in the same splitter:
+				if( tabBar == currentTabBar ) {
+					tabBar->setCurrentWidget( widget.get() );
+					widget->grabFocus();
+					return;
+				}
+				
+				// if we get here we need a new editor and to share scintilla document:
+				EditorPtr editor = editorManager->createEditor( );
+				
+				ScintillaEditPtr editorWidget = editor->getScintillaEdit( );
+				setupEditor( editorWidget );
+				registerEditorListeners( editorWidget );
+				
+				editor->setFile( existingEditor->getFilePath() );
+				editor->getScintillaEdit()->set_doc( widget->get_doc() );
+				
+				setupLexing( editor );
+				
+				int index = currentTabBar->addTab( editorWidget.get(), editor->getFileName() );
+				currentTabBar->setCurrentIndex( index );
+				editorWidget->grabFocus();
 				return;
+			
 			} else {
+				
 				// TODO: check if possible to get here...
 				std::cout << "Could not get tab widget for open editor for : " << fileName.toStdString() << std::endl;
 			}
 		}
 		
+		// If we get here the file is not open. Open and add:
 		EditorPtr editor = editorManager->createEditor( );
 		
 		if( editor ) {
@@ -178,120 +198,30 @@ void MainWindow::openFile( QString fileName ) {
 			setupEditor( editorWidget );
 			registerEditorListeners( editorWidget );
 			
-//			editorWidget->setLexer( language );
-//			editorWidget->clearDocumentStyle();
-			
-//			editorWidget->setLexer( SCLEX_CPP );
-//			editorWidget->setLexerLanguage( "cpp" );
-//			editorWidget->setProperty("lexer.cpp.track.preprocessor", "1" );
-//			editorWidget->setProperty("lexer.cpp.update.preprocessor", "1" );
-//			
-//			editorWidget->setKeyWords( 0, "case if else" );
-//			editorWidget->styleSetFore( SCE_C_WORD, 100 | (0 << 8) | (0 << 16) );
-//			editorWidget->styleSetFore( SCE_C_COMMENT, 100 | (0 << 8) | (0 << 16) );
-//			
-//			editorWidget->colourise( 0, -1 );
-//			
-//			editorWidget->gotoPos( 0 );
-			
-			
-			
-			// CPP lexer
-			//SendEditor( SCI_SETLEXER, SCLEX_CPP );
-			editorWidget->setLexer( SCLEX_CPP );
-			
-			// Set number of style bits to use
-			//SendEditor( SCI_SETSTYLEBITS, 5 );
-			editorWidget->setStyleBits( 5 );
-			
-			// Set tab width
-			//SendEditor( SCI_SETTABWIDTH, 4 );
-			editorWidget->setTabWidth( 3 );
-			
-			// Use CPP keywords
-			//SendEditor( SCI_SETKEYWORDS, 0, (LPARAM)g_cppKeyWords );
-			editorWidget->setKeyWords( 0, g_cppKeyWords );
-			
-			// Set up the global default style. These attributes
-			// are used wherever no explicit choices are made.
-			//SetAStyle( STYLE_DEFAULT, white, black, 10, "Courier New" );
-			editorWidget->styleSetFont( STYLE_DEFAULT, "Courier New" );
-			editorWidget->styleSetSize( STYLE_DEFAULT, 10 );
-			editorWidget->styleSetFore( STYLE_DEFAULT, createColor( 100, 100, 100 ) );
-			editorWidget->styleSetBack( STYLE_DEFAULT, createColor( 255, 255, 255 ) );
-			
-			// Set caret foreground color
-			//SendEditor( SCI_SETCARETFORE, RGB( 255, 255, 255 ) );
-			editorWidget->setCaretFore( createColor( 100, 100, 100 ) );
-			
-			// Set all styles
-			//SendEditor( SCI_STYLECLEARALL );
-			editorWidget->styleClearAll();
-			
-			// Set selection color
-			//SendEditor( SCI_SETSELBACK, TRUE, RGB( 0, 0, 255 ) );
-			editorWidget->setSelBack( 1, createColor( 10, 10, 100 ) );
-			
-			// Set syntax colors
-			int red = createColor( 200, 10, 10 );
-			int green = createColor( 10, 200, 10 );
-			int yellow = createColor( 200, 200, 10 );
-			int magenta = createColor( 200, 10, 200 );
-			int cyan = createColor( 10, 200, 200 );
-			editorWidget->styleSetFore( SCE_C_COMMENT,		green );
-			editorWidget->styleSetFore( SCE_C_COMMENTLINE,	green );
-			editorWidget->styleSetFore( SCE_C_COMMENTDOC,	green );
-			editorWidget->styleSetFore( SCE_C_NUMBER,		magenta );
-			editorWidget->styleSetFore( SCE_C_STRING,		yellow );
-			editorWidget->styleSetFore( SCE_C_CHARACTER,	yellow );
-			editorWidget->styleSetFore( SCE_C_UUID,			cyan );
-			editorWidget->styleSetFore( SCE_C_OPERATOR,		red );
-			editorWidget->styleSetFore( SCE_C_PREPROCESSOR,	cyan );
-			editorWidget->styleSetFore( SCE_C_WORD,			cyan );
-			
-			
-			
 			editor->loadFile( fileName );
-			
+			editorWidget->gotoPos( 0 );
 			editorWidget->emptyUndoBuffer();
 			
+			setupLexing( editor );
 			
-//			SCE_C_DEFAULT=0
-//			SCE_C_COMMENT=1
-//			SCE_C_COMMENTLINE=2
-//			SCE_C_COMMENTDOC=3
-//			SCE_C_NUMBER=4
-//			SCE_C_WORD=5
-//			SCE_C_STRING=6
-//			SCE_C_CHARACTER=7
-//			SCE_C_UUID=8
-//			SCE_C_PREPROCESSOR=9
-//			SCE_C_OPERATOR=10
-//			SCE_C_IDENTIFIER=11
-//			SCE_C_STRINGEOL=12
-//			SCE_C_VERBATIM=13
-//			SCE_C_REGEX=14
-//			SCE_C_COMMENTLINEDOC=15
-//			SCE_C_WORD2=16
-//			SCE_C_COMMENTDOCKEYWORD=17
-//			SCE_C_COMMENTDOCKEYWORDERROR=18
-//			SCE_C_GLOBALCLASS=19
-//			SCE_C_STRINGRAW=20
-//			SCE_C_TRIPLEVERBATIM=21
-//			SCE_C_HASHQUOTEDSTRING=22
-//			SCE_C_PREPROCESSORCOMMENT=23
-//			SCE_C_PREPROCESSORCOMMENTDOC=24
-//			SCE_C_USERLITERAL=25
-			
-			
-			std::cout << "Prop: " << QString( editorWidget->propertyNames() ).toStdString() << std::endl;
-			std::cout << "LExer: " << editorWidget->lexer() << std::endl;
-			
-			// create new tab entry:
-			int index = ui.tabBar->addTab( editorWidget.get(), editor->getFileName() );
-			ui.tabBar->setCurrentIndex( index );
-			editorWidget->activateWindow();
-			editorWidget->grabFocus();
+			// find out what is the active splitter if any. default is LEFT_SPLITTER:
+			splitter active = getCurrentSplitter( );
+			switch( active ) {
+				case LEFT_SPLITTER: {
+					
+					int index = ui.tabBarLeft->addTab( editorWidget.get(), editor->getFileName() );
+					ui.tabBarLeft->setCurrentIndex( index );
+					editorWidget->grabFocus();
+					break;
+				}
+				case RIGHT_SPLITTER: {
+					
+					int index = ui.tabBarRight->addTab( editorWidget.get(), editor->getFileName() );
+					ui.tabBarRight->setCurrentIndex( index );
+					editorWidget->grabFocus();
+					break;
+				}
+			}
 		}
 	}
 }
@@ -307,7 +237,7 @@ void MainWindow::saveFile( EditorPtr editor ) {
 	// If called with no editor get the current activate editor:
 	if( !editor ) {
 		// get current editor:
-		editor = editorManager->getEditor( (ScintillaEdit *) ui.tabBar->currentWidget() );
+		editor = editorManager->getEditor( (ScintillaEdit *) ui.tabBarLeft->currentWidget() );
 	}
 	
 	if( editor ) {
@@ -331,7 +261,7 @@ void MainWindow::saveAsFile( EditorPtr editor ) {
 	// If called with no editor get the current activate editor:
 	if( !editor ) {
 		// get current editor:
-		editor = editorManager->getEditor( (ScintillaEdit *) ui.tabBar->currentWidget() );
+		editor = editorManager->getEditor( (ScintillaEdit *) ui.tabBarLeft->currentWidget() );
 	}
 	
 	if( editor ) {
@@ -348,7 +278,7 @@ void MainWindow::saveAsFile( EditorPtr editor ) {
 			directory.cdUp();
 			settings.setValue( "path/save", directory.path() );
 			
-			editor->setFileName( filename );
+			editor->setFile( filename );
 			editor->saveFile();
 		} else {
 			
@@ -369,7 +299,7 @@ void MainWindow::saveAsFile( EditorPtr editor ) {
 void MainWindow::closeFile( int index ) {
 	
 	// get current editor:
-	EditorPtr editor = editorManager->getEditor( (ScintillaEdit *) ui.tabBar->currentWidget() );
+	EditorPtr editor = editorManager->getEditor( (ScintillaEdit *) ui.tabBarLeft->currentWidget() );
 	
 	if( editor->isDirty ) {
 		int res = QMessageBox::warning( this, tr("QSciTE"), tr("This session has been modified.\n Do you want to save your changes?"),
@@ -380,7 +310,7 @@ void MainWindow::closeFile( int index ) {
 	}
 	
 	// Finally remove tab:
-	ui.tabBar->removeTab( index );
+	ui.tabBarLeft->removeTab( index );
 
 	editorManager->removeEditor( editor );
 }
@@ -393,7 +323,7 @@ void MainWindow::closeFile( int index ) {
 void MainWindow::undo( ) {
 	
 	// get current editor:
-	ScintillaEdit *editor = (ScintillaEdit *) ui.tabBar->currentWidget();
+	ScintillaEdit *editor = (ScintillaEdit *) ui.tabBarLeft->currentWidget();
 	
 	if( editor && editor->canUndo() ) {
 		editor->undo();
@@ -410,7 +340,7 @@ void MainWindow::undo( ) {
 void MainWindow::redo( ) {
 
 	// get current editor:
-	ScintillaEdit *editor = (ScintillaEdit *) ui.tabBar->currentWidget();
+	ScintillaEdit *editor = (ScintillaEdit *) ui.tabBarLeft->currentWidget();
 
 	if( editor && editor->canRedo() ) {
 		editor->redo();
@@ -455,7 +385,7 @@ void MainWindow::findNext( ) {
 	
 	QString searchString = ui.searchField->text();
 	
-	EditorPtr editor = editorManager->getEditor( (ScintillaEdit *) ui.tabBar->currentWidget() );
+	EditorPtr editor = editorManager->getEditor( (ScintillaEdit *) ui.tabBarLeft->currentWidget() );
 	QPair<int, int> found = editor->findNext( searchString );
 	
 	//std::cout << "Find Next: " << searchString.toStdString() << ". <" << found.first << ", " << found.second << ">" << std::endl;
@@ -470,7 +400,7 @@ void MainWindow::findPrevious( ) {
 
 	QString searchString = ui.searchField->text();
 	
-	EditorPtr editor = editorManager->getEditor( (ScintillaEdit *) ui.tabBar->currentWidget() );
+	EditorPtr editor = editorManager->getEditor( (ScintillaEdit *) ui.tabBarLeft->currentWidget() );
 	QPair<int, int> found = editor->findPrevious( searchString );
 	
 	//std::cout << "Find Previous: " << searchString.toStdString() << ". <" << found.first << ", " << found.second << ">" << std::endl;
@@ -505,7 +435,6 @@ void MainWindow::replace( ) {
 
 /**
  * MainWindow::replaceNext
- *
  * @author: jhenriques 2014
  */
 void MainWindow::replaceNext( ) {
@@ -513,8 +442,77 @@ void MainWindow::replaceNext( ) {
 	QString searchString = ui.replaceSearchField->text();
 	QString replaceString = ui.replaceField->text();
 	
-	EditorPtr editor = editorManager->getEditor( (ScintillaEdit *) ui.tabBar->currentWidget() );
+	EditorPtr editor = editorManager->getEditor( (ScintillaEdit *) ui.tabBarLeft->currentWidget() );
 	editor->replaceNext( searchString, replaceString );
+}
+
+/**
+ * MainWindow::setSingleSplitter
+ * @author: jhenriques 2014
+ */
+void MainWindow::setSingleSplitter( ) {
+	
+	switch( currentSplitterConf ) {
+		case SINGLE: { break; }	// Nothing to do here;
+		case DOUBLE_H:
+		case DOUBLE_V: {	// Got to move all buffers to left tab bar...
+			
+			QTabWidget *left = ui.tabBarLeft;
+			QTabWidget *right = ui.tabBarRight;
+			
+			for( int i = 0, iCount = right->count(); i < iCount; ++i ) {
+				QWidget *toMove = right->widget( i );
+				moveTab( toMove, right, left );
+			}
+
+			break;
+		}
+	}
+	
+	ui.tabBarRight->hide();
+	currentSplitterConf = SINGLE;
+}
+
+/**
+ * MainWindow::setDoubleHSplitter
+ * @author: jhenriques 2014
+ */
+void MainWindow::setDoubleHSplitter( ) {
+
+	ui.splitter->setOrientation( Qt::Horizontal );
+	ui.tabBarRight->show();
+	
+	switch( currentSplitterConf ) {
+		case SINGLE: { // if coming from single layout, move focus to right layout:
+			ui.tabBarRight->setFocus();
+			break;
+		}
+		case DOUBLE_H:
+		case DOUBLE_V: { break; } // Nothing to do here;
+	}
+	
+	currentSplitterConf = DOUBLE_H;
+}
+
+/**
+ * MainWindow::setDoubleVSplitter
+ * @author: jhenriques 2014
+ */
+void MainWindow::setDoubleVSplitter( ) {
+
+	ui.splitter->setOrientation( Qt::Vertical );
+	ui.tabBarRight->show();
+	
+	switch( currentSplitterConf ) {
+		case SINGLE: { // if coming from single layout, move focus to right layout:
+			ui.tabBarRight->setFocus();
+			break;
+		}
+		case DOUBLE_H:
+		case DOUBLE_V: { break; } // Nothing to do here;
+	}
+	
+	currentSplitterConf = DOUBLE_V;
 }
 
 /**
@@ -537,7 +535,6 @@ void MainWindow::setupEditor( ScintillaEditPtr editor ) {
 void MainWindow::registerEditorListeners( ScintillaEditPtr editor ) {
 	
 	connect( editor.get(), SIGNAL(savePointChanged(bool)), this, SLOT(editorModified(bool)) );
-	//connect( editor.get(), SIGNAL(styleNeeded(int)), this, SLOT(styleNeeded(int) ) );
 	
 }
 
@@ -562,6 +559,10 @@ void MainWindow::registerMainWindowActions() {
 	addAction( replaceAction );
 	addAction( replaceNextAction );
 	
+	addAction( singleSplitterAction );
+	addAction( doubleHorizontalSplitterAction );
+	addAction( doubleVerticalSplitterAction );
+	
 }
 
 /**
@@ -572,6 +573,14 @@ void MainWindow::registerMainWindowActions() {
 void MainWindow::editorModified( bool dirty ) {
 	
 	ScintillaEdit *modifiedEditor = (ScintillaEdit *) QObject::sender();
+	if( !modifiedEditor || !modifiedEditor->parentWidget() ) {
+		return;
+	}
+	
+	QTabWidget *tabBar = (QTabWidget *) modifiedEditor->parentWidget()->parentWidget();
+	if( !tabBar ) {
+		return;
+	}
 	
 	EditorPtr editor = editorManager->getEditor( modifiedEditor );
 	if( editor ) {
@@ -580,22 +589,133 @@ void MainWindow::editorModified( bool dirty ) {
 		
 		QString tabLabel = ( editor->getFileName() == "" ? tr("untitled") : editor->getFileName() );
 		
-		int index = ui.tabBar->indexOf( modifiedEditor );
+		// must look for index of on tab bar:
+		int index = tabBar->currentIndex();
+		for( int i = 0, iCount = tabBar->count(); i < iCount; ++i ) {
+			if( tabBar->widget( i ) == (QWidget *) modifiedEditor ) {
+				index = i;
+				break;
+			}
+		}
+
 		if( dirty ) {
-			ui.tabBar->setTabText( index, tabLabel + "*" );
+			tabBar->setTabText( index, tabLabel + "*" );
 		} else {
-			ui.tabBar->setTabText( index, tabLabel );
+			tabBar->setTabText( index, tabLabel );
 		}
 	}
 }
-			
-//void MainWindow::styleNeeded( int position ) {
-//	
-//	ScintillaEdit *modifiedEditor = (ScintillaEdit *) QObject::sender();
-//	
-//	std::cout << "style needed for position " << position << std::endl;
-//}
 
+/**
+ * MainWindow::setupLexing
+ * @author: jhenriques 2014
+ */
+void MainWindow::setupLexing( EditorPtr editor ) {
+
+	// detect file extension:
+	int language = SCLEX_NULL;
+	QString fileName = editor->getFileName();
+	if( fileName.endsWith( ".cpp", Qt::CaseInsensitive ) || fileName.endsWith( ".hpp", Qt::CaseInsensitive ) ||
+		fileName.endsWith( ".c", Qt::CaseInsensitive ) || fileName.endsWith( ".h", Qt::CaseInsensitive ) ||
+		fileName.endsWith( ".cc", Qt::CaseInsensitive ) || fileName.endsWith( ".hh", Qt::CaseInsensitive ) ||
+		fileName.endsWith( ".c++", Qt::CaseInsensitive ) || fileName.endsWith( ".h++", Qt::CaseInsensitive ) ||
+  		fileName.endsWith( ".cp", Qt::CaseInsensitive ) || fileName.endsWith( ".hp", Qt::CaseInsensitive ) ||
+		fileName.endsWith( ".cxx", Qt::CaseInsensitive ) || fileName.endsWith( ".hxx", Qt::CaseInsensitive ) ) {
+		language = SCLEX_CPP;
+	}
+	
+	switch( language ) {
+		case SCLEX_CPP:		{ setupCPPLexing( editor ); break; }
+		case SCLEX_FORTRAN: { setupFortranLexing( editor ); break; }
+		default: {
+			break;
+		}
+	}
+}
+																			  
+/**
+ * MainWindow::setupCPPLexing
+ * @author: jhenriques 2014
+ */
+void MainWindow::setupCPPLexing( EditorPtr editor ) {
+	
+	ScintillaEditPtr editorWidget = editor->getScintillaEdit();
+	
+	// CPP lexer
+	editorWidget->setLexer( SCLEX_CPP );
+	
+	// Set number of style bits to use
+	editorWidget->setStyleBits( 5 );
+	
+	// Set tab width
+	editorWidget->setTabWidth( 3 );
+	
+	// Use CPP keywords
+	QString keywords =	"asm auto bool break case catch char class const "
+						"const_cast continue default delete do double "
+						"dynamic_cast else enum explicit extern false finally "
+						"float for friend goto if inline int long mutable "
+						"namespace new operator private protected public "
+						"register reinterpret_cast register return short signed "
+						"sizeof static static_cast struct switch template "
+						"this throw true try typedef typeid typename "
+						"union unsigned using virtual void volatile "
+						"wchar_t while "
+						"__asm __asume __based __box __cdecl __declspec "
+						"__delegate delegate depreciated dllexport dllimport "
+						"event __event __except __fastcall __finally __forceinline "
+						"__int8 __int16 __int32 __int64 __int128 __interface "
+						"interface __leave naked noinline __noop noreturn "
+						"nothrow novtable nullptr safecast __stdcall "
+						"__try __except __finally __unaligned uuid __uuidof "
+						"__virtual_inheritance";
+	editorWidget->setKeyWords( 0, keywords.toAscii() );
+	
+	// Set up the global default style. These attributes
+	// are used wherever no explicit choices are made.
+	editorWidget->styleSetFont( STYLE_DEFAULT, "Courier New" );
+	editorWidget->styleSetSize( STYLE_DEFAULT, 10 );
+	editorWidget->styleSetFore( STYLE_DEFAULT, createColor( 100, 100, 100 ) );
+	editorWidget->styleSetBack( STYLE_DEFAULT, createColor( 255, 255, 255 ) );
+	
+	// Set caret foreground color
+	editorWidget->setCaretFore( createColor( 100, 100, 100 ) );
+	
+	// Set all styles
+	editorWidget->styleClearAll();
+	
+	// Set selection color
+	editorWidget->setSelBack( 1, createColor( 10, 10, 100 ) );
+	
+	// Set syntax colors
+	int red = createColor( 200, 10, 10 );
+	int green = createColor( 10, 200, 10 );
+	int yellow = createColor( 200, 200, 10 );
+	int magenta = createColor( 200, 10, 200 );
+	int cyan = createColor( 10, 200, 200 );
+	editorWidget->styleSetFore( SCE_C_COMMENT,		green );
+	editorWidget->styleSetFore( SCE_C_COMMENTLINE,	green );
+	editorWidget->styleSetFore( SCE_C_COMMENTDOC,	green );
+	editorWidget->styleSetFore( SCE_C_NUMBER,		magenta );
+	editorWidget->styleSetFore( SCE_C_STRING,		yellow );
+	editorWidget->styleSetFore( SCE_C_CHARACTER,	yellow );
+	editorWidget->styleSetFore( SCE_C_UUID,			cyan );
+	editorWidget->styleSetFore( SCE_C_OPERATOR,		red );
+	editorWidget->styleSetFore( SCE_C_PREPROCESSOR,	cyan );
+	editorWidget->styleSetFore( SCE_C_WORD,			cyan );
+	
+	editorWidget->setProperty( "fold", "1" );
+	std::cout << "Prop: " << QString( editorWidget->propertyNames() ).toStdString() << std::endl;
+	std::cout << "LExer: " << editorWidget->lexer() << std::endl;
+}
+
+/**
+ * MainWindow::setupFortranLexing
+ * @author: jhenriques 2014
+ */
+void MainWindow::setupFortranLexing( EditorPtr ) {
+	
+}
 
 /**
  * MainWindow::closeEvent
@@ -648,6 +768,81 @@ void MainWindow::dropEvent( QDropEvent *event ) {
 	}
 	
 	event->accept();
+}
+
+/**
+ * MainWindow::moveTab
+ * @author: jhenriques 2014
+ */
+void MainWindow::moveTab( QWidget *toMove, QTabWidget *from, QTabWidget *to ) {
+	
+	if( !toMove || !from || !to ) {
+		return;
+	}
+	
+	// get indexs:
+	int indexFrom = from->indexOf( toMove );
+	if( indexFrom == -1 ) {
+		return;
+	}
+	
+	// check if document is also open on to tab:
+	EditorPtr editor = editorManager->getEditor( (ScintillaEdit *) toMove );
+	QString filePath = editor->getFilePath();
+	
+	for( int i = 0, iCount = to->count(); i < iCount; ++i ) {
+		
+		EditorPtr curEditor = editorManager->getEditor( (ScintillaEdit *) to->widget( i ) );
+		if( !filePath.isEmpty() && curEditor->getFilePath() == filePath ) {
+			
+			// this file is already open on to tab widget.
+			// just remove it from from tab:
+			from->removeTab( indexFrom );
+			return;
+		}
+	}
+	
+	// If we get here we only need to remove from from tab and add to to tab:
+	to->addTab( toMove, from->tabText( indexFrom ) );
+	from->removeTab( indexFrom );
+}
+
+/**
+ * MainWindow::createActions
+ * This is more or less an hack to avoid extending QSplitter...
+ * It will try to guess what is the current splitter based on
+ * the widget that has application focus;
+ * @author: jhenriques 2014
+ */
+splitter MainWindow::getCurrentSplitter( ) {
+		
+	QWidget *focusWidget = this->focusWidget();
+	
+	if( focusWidget ) {
+		
+		if( focusWidget == (QWidget *)ui.tabBarLeft ) {
+			return LEFT_SPLITTER;
+		} else if( focusWidget == (QWidget *)ui.tabBarRight ) {
+			return RIGHT_SPLITTER;
+		}
+		
+		if( focusWidget->parentWidget() == (QWidget *)ui.tabBarLeft ) {
+			return LEFT_SPLITTER;
+		} else if( focusWidget->parentWidget() == (QWidget *)ui.tabBarRight ) {
+			return RIGHT_SPLITTER;
+		} else if( focusWidget->parentWidget() ) {
+			
+			ScintillaEdit *editor = (ScintillaEdit *) focusWidget->parentWidget()->parentWidget();
+			
+			if( editor == (QWidget *)ui.tabBarLeft ) {
+				return LEFT_SPLITTER;
+			} else if( editor == (QWidget *)ui.tabBarRight ) {
+				return RIGHT_SPLITTER;
+			}
+		}
+	}
+
+	return LEFT_SPLITTER; // the default;
 }
 
 /**
@@ -731,6 +926,23 @@ void MainWindow::createActions() {
 	replaceNextAction->setShortcut( QKeySequence::Replace );
 	replaceNextAction->setStatusTip( tr("Replace next...") );
 	connect( replaceNextAction, SIGNAL(triggered()), this, SLOT(replaceNext()) );
+	
+	
+	// splitter actions:
+	singleSplitterAction = new QAction( "Single", this );
+	singleSplitterAction->setShortcut( tr("Alt+Ctrl+1") );
+	singleSplitterAction->setStatusTip( tr("Single") );
+	connect( singleSplitterAction, SIGNAL(triggered()), this, SLOT(setSingleSplitter()) );
+	
+	doubleHorizontalSplitterAction = new QAction( "Dual Horizontal", this );
+	doubleHorizontalSplitterAction->setShortcut( tr("Alt+Ctrl+2") );
+	doubleHorizontalSplitterAction->setStatusTip( tr("Dual Horizontal") );
+	connect( doubleHorizontalSplitterAction, SIGNAL(triggered()), this, SLOT(setDoubleHSplitter()) );
+	
+	doubleVerticalSplitterAction = new QAction( "Dual Vertical", this );
+	doubleVerticalSplitterAction->setShortcut( tr("Alt+Ctrl+3") );
+	doubleVerticalSplitterAction->setStatusTip( tr("Dual Vertical") );
+	connect( doubleVerticalSplitterAction, SIGNAL(triggered()), this, SLOT(setDoubleVSplitter()) );
 
 }
 
@@ -764,6 +976,12 @@ void MainWindow::createMenus() {
 	findMenu->addSeparator();
 	findMenu->addAction( replaceAction );
 	findMenu->addAction( replaceNextAction );
+	
+	viewMenu = menuBar()->addMenu( tr("View") );
+	QMenu *layoutMenu = viewMenu->addMenu( tr("Layout") );
+	layoutMenu->addAction( singleSplitterAction );
+	layoutMenu->addAction( doubleHorizontalSplitterAction );
+	layoutMenu->addAction( doubleVerticalSplitterAction );
 	
 }
 
