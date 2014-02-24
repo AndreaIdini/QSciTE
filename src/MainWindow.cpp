@@ -645,7 +645,7 @@ void MainWindow::setupCPPLexing( EditorPtr editor ) {
 	editorWidget->setLexer( SCLEX_CPP );
 	
 	// Set number of style bits to use
-	editorWidget->setStyleBits( 5 );
+	//editorWidget->setStyleBits( 5 );
 	
 	// Set tab width
 	editorWidget->setTabWidth( 3 );
@@ -704,9 +704,49 @@ void MainWindow::setupCPPLexing( EditorPtr editor ) {
 	editorWidget->styleSetFore( SCE_C_PREPROCESSOR,	cyan );
 	editorWidget->styleSetFore( SCE_C_WORD,			cyan );
 	
+	// set margin style:
+	editorWidget->setMarginWidthN( 2, 16 );
+	editorWidget->setMarginMaskN( 2, SC_MASK_FOLDERS );
+	editorWidget->setMarginSensitiveN( 2, true );
+	//editorWidget->setAutomaticFold( SC_AUTOMATICFOLD_SHOW & SC_AUTOMATICFOLD_CLICK & SC_AUTOMATICFOLD_CHANGE );
+	editorWidget->setAutomaticFold( SC_AUTOMATICFOLD_CLICK );
+	
+	editorWidget->setFoldMarginColour( true, createColor(240, 240, 240) );
+	
+	// set of markers to use for folding:
+	editorWidget->markerDefine( SC_MARKNUM_FOLDEROPEN, SC_MARK_BOXMINUS );
+	editorWidget->markerDefine( SC_MARKNUM_FOLDER, SC_MARK_BOXPLUS );
+	editorWidget->markerDefine( SC_MARKNUM_FOLDERSUB, SC_MARK_VLINE );
+	editorWidget->markerDefine( SC_MARKNUM_FOLDERTAIL, SC_MARK_LCORNER );
+	editorWidget->markerDefine( SC_MARKNUM_FOLDEREND, SC_MARK_BOXPLUSCONNECTED );
+	editorWidget->markerDefine( SC_MARKNUM_FOLDEROPENMID, SC_MARK_BOXMINUSCONNECTED );
+	editorWidget->markerDefine( SC_MARKNUM_FOLDERMIDTAIL, SC_MARK_TCORNER );
+	
+	// colors:
+	editorWidget->markerSetFore( SC_MARKNUM_FOLDER, createColor(200, 200, 210) );
+	editorWidget->markerSetBack( SC_MARKNUM_FOLDER, createColor(100, 100, 100) );
+	editorWidget->markerSetFore( SC_MARKNUM_FOLDEROPEN, createColor(200, 200, 210) );
+	editorWidget->markerSetBack( SC_MARKNUM_FOLDEROPEN, createColor(100, 100, 100) );
+	editorWidget->markerSetBack( SC_MARKNUM_FOLDERSUB, createColor(200, 200, 200) );
+	editorWidget->markerSetBack( SC_MARKNUM_FOLDERTAIL, createColor(200, 200, 200) );
+	editorWidget->markerSetFore( SC_MARKNUM_FOLDEREND, createColor(200, 200, 210) );
+	editorWidget->markerSetBack( SC_MARKNUM_FOLDEREND, createColor(100, 100, 100) );
+	editorWidget->markerSetFore( SC_MARKNUM_FOLDEROPENMID, createColor(200, 200, 210) );
+	editorWidget->markerSetBack( SC_MARKNUM_FOLDEROPENMID, createColor(100, 100, 100) );
+	editorWidget->markerSetBack( SC_MARKNUM_FOLDERTAIL, createColor(200, 200, 200) );
+	editorWidget->markerSetBack( SC_MARKNUM_FOLDERMIDTAIL, createColor(200, 200, 200) );
+	
+	// lexer folding configuration:
 	editorWidget->setProperty( "fold", "1" );
-	std::cout << "Prop: " << QString( editorWidget->propertyNames() ).toStdString() << std::endl;
-	std::cout << "LExer: " << editorWidget->lexer() << std::endl;
+	editorWidget->setProperty( "fold.cpp.syntax.based", "1" );
+	editorWidget->setProperty( "fold.comment", "1" );
+	editorWidget->setProperty( "fold.cpp.comment.multiline", "1" );
+	editorWidget->setProperty( "fold.cpp.comment.explicit", "1" );
+	editorWidget->setProperty( "fold.cpp.explicit.start", "1" );
+	editorWidget->setProperty( "fold.cpp.explicit.anywhere", "1" );
+	editorWidget->setProperty( "fold.preprocessor", "1" );
+	editorWidget->setProperty( "fold.compact", "1" );
+	editorWidget->setProperty( "fold.at.else", "1" );
 }
 
 /**
