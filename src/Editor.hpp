@@ -42,8 +42,8 @@ public:
 	
 	bool saveFile( );
 	
-	void setFileName( QString );
-	void setFileName( QFileInfo );
+	void setFile( QString );
+	void setFile( QFileInfo );
 	QString getFileName( );
 	QString getFilePath( );
 	

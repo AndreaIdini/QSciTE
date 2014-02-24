@@ -94,7 +94,7 @@ bool Editor::saveFile( ) {
  *
  *
  */
-void Editor::setFileName( QString newName ) {
+void Editor::setFile( QString newName ) {
 	
 	if( newName.isEmpty() ) {
 		return;
@@ -107,7 +107,7 @@ void Editor::setFileName( QString newName ) {
  *
  *
  */
-void Editor::setFileName( QFileInfo newFilePath ) {
+void Editor::setFile( QFileInfo newFilePath ) {
 	
 	filePath = newFilePath;
 }
