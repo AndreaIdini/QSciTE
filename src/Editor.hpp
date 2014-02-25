@@ -24,7 +24,11 @@ private:
 	QString filePath;
 	
 	QPair<int, int> lastFound;
-
+	
+protected:
+	
+	void tagAllMatches( QString );
+	
 public:
 	
 	bool isDirty;
@@ -48,6 +52,7 @@ public:
 	QPair<int, int> findNext( QString );
 	QPair<int, int> findPrevious( QString );
 	QPair<int, int> replaceNext( QString, QString );
+	void clearSearchIndicators( );
 	
 	ScintillaEdit * getScintillaEdit( );
 	void setScintillaEdit( ScintillaEdit * );

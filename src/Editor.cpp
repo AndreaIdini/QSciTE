@@ -16,7 +16,6 @@ Editor::~Editor( ) {
 
 }
 
-
 bool Editor::loadFile( QString file ) {
 	return loadFile( QFileInfo( file ) );
 }
@@ -131,6 +130,34 @@ QString Editor::getFilePath( ) {
  *
  *
  */
+void Editor::tagAllMatches( QString searchString ) {
+	
+	clearSearchIndicators();
+	
+	if( searchString == "" ) {
+		return;
+	}
+
+	int docLength = editor->get_doc()->length();
+	QPair<int, int> tmpFound( 0, 0 );
+	editor->setIndicatorCurrent( 0 );
+	while( 1 ) {
+		
+		tmpFound = editor->find_text( 0, searchString.toStdString().data(), tmpFound.second, docLength );
+		if( tmpFound.first == -1 ) {
+			break;
+		}
+		
+		editor->indicatorStart( 0, lastFound.first );
+		editor->indicatorEnd( 0, lastFound.second );
+		editor->indicatorFillRange( tmpFound.first, tmpFound.second - tmpFound.first );
+	}
+}
+
+/**
+ *
+ *
+ */
 QPair<int, int> Editor::findNext( QString searchString ) {
 	
 	if( !editor ) {
@@ -138,6 +165,16 @@ QPair<int, int> Editor::findNext( QString searchString ) {
 	}
 
 	int docLength = editor->get_doc()->length();
+
+	// tag all matches:
+	tagAllMatches( searchString );
+	
+	// now select the next match:
+	//first clear previous lastfound:
+	editor->indicatorStart( 1, lastFound.first );
+	editor->indicatorEnd( 1, lastFound.second );
+	editor->setIndicatorCurrent( 1 );
+	editor->indicatorClearRange( lastFound.first, lastFound.second - lastFound.first );
 	
 	lastFound = editor->find_text( 0, searchString.toStdString().data(), lastFound.second, docLength );
 	
@@ -145,6 +182,11 @@ QPair<int, int> Editor::findNext( QString searchString ) {
 		
 		editor->setSelectionStart( lastFound.first );
 		editor->setSelectionEnd( lastFound.second );
+		
+		editor->indicatorStart( 1, lastFound.first );
+		editor->indicatorEnd( 1, lastFound.second );
+		editor->setIndicatorCurrent( 1 );
+		editor->indicatorFillRange( lastFound.first, lastFound.second - lastFound.first );
 		
 		// does not seem to work...
 		editor->findIndicatorShow( lastFound.first, lastFound.second );
@@ -168,12 +210,31 @@ QPair<int, int> Editor::findPrevious( QString searchString ) {
 		return QPair<int, int>( -1, 0 );
 	}
 	
+	// tag all matches:
+	tagAllMatches( searchString );
+	
+	// now select the next match:
+	// first clear previous lastfound:
+	editor->indicatorStart( 1, lastFound.first );
+	editor->indicatorEnd( 1, lastFound.second );
+	editor->setIndicatorCurrent( 1 );
+	editor->indicatorClearRange( lastFound.first, lastFound.second - lastFound.first );
+	
 	lastFound = editor->find_text( 0, searchString.toStdString().data(), lastFound.first, 0 );
 	
 	if( lastFound.first != -1 ) {
 		
 		editor->setSelectionStart( lastFound.first );
 		editor->setSelectionEnd( lastFound.second );
+		
+		editor->indicatorStart( 1, lastFound.first );
+		editor->indicatorEnd( 1, lastFound.second );
+		editor->setIndicatorCurrent( 1 );
+		editor->indicatorFillRange( lastFound.first, lastFound.second - lastFound.first );
+		
+		// does not seem to work...
+		editor->findIndicatorShow( lastFound.first, lastFound.second );
+		
 	} else {
 		
 		// allow the find to loop:
@@ -196,6 +257,16 @@ QPair<int, int> Editor::replaceNext( QString search, QString replace ) {
 
 	int docLength = editor->get_doc()->length();
 	
+	// tag all matches:
+	tagAllMatches( search );
+	
+	// now select the next match:
+	// first clear previous lastfound:
+	editor->indicatorStart( 1, lastFound.first );
+	editor->indicatorEnd( 1, lastFound.first + replace.length() );
+	editor->setIndicatorCurrent( 1 );
+	editor->indicatorClearRange( lastFound.first, replace.length() );
+	
 	lastFound = editor->find_text( 0, search.toStdString().data(), lastFound.second, docLength );
 	
 	if( lastFound.first != -1 ) {
@@ -206,6 +277,12 @@ QPair<int, int> Editor::replaceNext( QString search, QString replace ) {
 		
 		editor->setSelectionStart( lastFound.first );
 		editor->setSelectionEnd( lastFound.first + replace.length() );
+		
+		editor->indicatorStart( 1, lastFound.first );
+		editor->indicatorEnd( 1, lastFound.first + replace.length() );
+		editor->setIndicatorCurrent( 1 );
+		editor->indicatorFillRange( lastFound.first, replace.length() );
+		
 	} else {
 		
 		// allow for looping:
@@ -213,6 +290,19 @@ QPair<int, int> Editor::replaceNext( QString search, QString replace ) {
 	}
 	
 	return lastFound;
+}
+
+/**
+ *
+ *
+ */
+void Editor::clearSearchIndicators( ) {
+
+	editor->setIndicatorCurrent( 0 );
+	editor->indicatorClearRange( 0, editor->get_doc()->length() );
+	
+	editor->setIndicatorCurrent( 1 );
+	editor->indicatorClearRange( 0, editor->get_doc()->length() );
 }
 
 /**

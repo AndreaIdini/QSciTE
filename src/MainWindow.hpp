@@ -40,7 +40,7 @@ public slots:
 	void redo( );
 	
 	void find( );
-	void findNext( );
+	void findNext( QString = "" );
 	void findPrevious( );
 	void replace( );
 	void replaceNext( );
@@ -100,6 +100,7 @@ private:
 	QByteArray savedGeometry;
 	
 	splitterConfig currentSplitterConf;
+	splitter findSelectedSplitter;
 	
 	// Menus:
 	QMenu *fileMenu;

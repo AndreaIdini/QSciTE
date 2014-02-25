@@ -13,6 +13,7 @@ const int base2 = 238 | (232 << 8) | (213 << 16);
 const int base3 = 253 | (246 << 8) | (227 << 16);
 const int yellow = 115 | (138 << 8) | (5 << 16);
 const int orange = 203 | (75 << 8) | (22 << 16);
+const int gold = 254 | (231 << 8) | (146 << 16);
 const int red = 220 | (50 << 8) | (47 << 16);
 const int magenta = 211 | (54 << 8) | (130 << 16);
 const int violet = 108 | (113 << 8) | (196 << 16);
@@ -38,13 +39,16 @@ MainWindow::MainWindow( QApplication &app ) : QMainWindow(), windowModified(fals
 	ui.tabBarRight->hide();
 	
 	currentSplitterConf = SINGLE;
+	findSelectedSplitter = LEFT_SPLITTER;
 	
 	// Find/Replace config:
 	ui.searchFrame->hide();
+	connect( ui.searchField, SIGNAL(textChanged(QString)), this, SLOT(findNext(QString)) );
 	connect( ui.nextButton, SIGNAL(clicked()), this, SLOT(findNext()) );
 	connect( ui.previousButton, SIGNAL(clicked()), this, SLOT(findPrevious()) );
 	
 	ui.replaceFrame->hide();
+	connect( ui.replaceSearchField, SIGNAL(textChanged(QString)), this, SLOT(findNext(QString)) );
 	connect( ui.replaceNextButton, SIGNAL(clicked()), this, SLOT(findNext()) );
 	connect( ui.replaceButton, SIGNAL(clicked()), this, SLOT(replaceNext()) );
 	
@@ -216,6 +220,8 @@ void MainWindow::openFile( QString fileName ) {
 			}
 		}
 	}
+	
+	this->activateWindow();
 }
 
 /**
@@ -418,6 +424,8 @@ void MainWindow::redo( ) {
  */
 void MainWindow::find( ) {
 	
+	splitter active = getCurrentSplitter( );
+	
 	if( ui.replaceFrame->isVisible() ) {
 		ui.replaceFrame->hide();
 		
@@ -429,6 +437,19 @@ void MainWindow::find( ) {
 	
 	if( ui.searchFrame->isVisible() ) {
 		ui.searchFrame->hide();
+		
+		switch( active ) {
+			case LEFT_SPLITTER: {
+				EditorPtr editor = editorManager->getEditor( (ScintillaEdit *) ui.tabBarLeft->currentWidget() );
+				if( editor ) { editor->clearSearchIndicators(); }
+				break;
+			}
+			case RIGHT_SPLITTER: {
+				EditorPtr editor = editorManager->getEditor( (ScintillaEdit *) ui.tabBarRight->currentWidget() );
+				if( editor ) { editor->clearSearchIndicators(); }
+				break;
+			}
+		}
 	} else {
 		ui.searchFrame->show();
 		ui.searchField->setFocus();
@@ -441,12 +462,27 @@ void MainWindow::find( ) {
  *
  * @author: jhenriques 2014
  */
-void MainWindow::findNext( ) {
+void MainWindow::findNext( QString search ) {
 	
-	QString searchString = ui.searchField->text();
+	QString searchString = search;
+	QObject *sender = QObject::sender();
+	
+	if( searchString == "" ) {
+		if( sender ) {
+			if( sender == ui.nextButton ) {
+				searchString = ui.searchField->text();
+			} else if( sender == ui.replaceNextButton ) {
+				searchString = ui.replaceSearchField->text();
+			}
+		}
+	}
 	
 	EditorPtr editor;
 	splitter active = getCurrentSplitter( );
+	if( active != findSelectedSplitter ) {
+		active = findSelectedSplitter;
+		findSelectedSplitter = getCurrentSplitter( );
+	}
 	switch( active ) {
 		case LEFT_SPLITTER: {
 			editor = editorManager->getEditor( (ScintillaEdit *) ui.tabBarLeft->currentWidget() );
@@ -506,6 +542,8 @@ void MainWindow::findPrevious( ) {
  * @author: jhenriques 2014
  */
 void MainWindow::replace( ) {
+	
+	splitter active = getCurrentSplitter( );
 
 	if( ui.searchFrame->isVisible() ) {
 		ui.searchFrame->hide();
@@ -518,6 +556,19 @@ void MainWindow::replace( ) {
 	
 	if( ui.replaceFrame->isVisible() ) {
 		ui.replaceFrame->hide();
+		
+		switch( active ) {
+			case LEFT_SPLITTER: {
+				EditorPtr editor = editorManager->getEditor( (ScintillaEdit *) ui.tabBarLeft->currentWidget() );
+				if( editor ) { editor->clearSearchIndicators(); }
+				break;
+			}
+			case RIGHT_SPLITTER: {
+				EditorPtr editor = editorManager->getEditor( (ScintillaEdit *) ui.tabBarRight->currentWidget() );
+				if( editor ) { editor->clearSearchIndicators(); }
+				break;
+			}
+		}
 	} else {
 		ui.replaceFrame->show();
 		ui.replaceSearchField->setFocus();
@@ -675,6 +726,19 @@ void MainWindow::setupEditor( ScintillaEdit *editor ) {
 	editor->setIndentationGuides( SC_IV_LOOKBOTH );
 	
 	//editor->setCaretSticky( SC_CARETSTICKY_WHITESPACE );
+	
+	// indicators setup:
+	// INDIC_0 -> box around the match
+	editor->indicSetStyle( 0, INDIC_ROUNDBOX );
+	editor->indicSetFore( 0, base0 );
+	editor->indicSetAlpha( 0, 0 );
+	editor->indicSetOutlineAlpha( 0, 230 );
+	
+	// INDIC_0 -> filled box around current match
+	editor->indicSetStyle( 1, INDIC_ROUNDBOX );
+	editor->indicSetFore( 1, gold );
+	editor->indicSetAlpha( 1, 50 );
+	editor->indicSetOutlineAlpha( 1, 0 );
 }
 
 /**
