@@ -21,8 +21,7 @@ class EditorManager {
 private:
 	
 	std::vector< EditorPtr > editors;
-	std::map< ScintillaEditPtr, EditorPtr > editorsMap;
-	std::map< ScintillaEdit *, EditorPtr > editorsPtrMap;
+	std::vector< EditorPtr > editorsRemoved;
 	
 protected:
 	
@@ -33,14 +32,12 @@ public:
 	
 	EditorPtr createEditor( );
 	
-	EditorPtr getEditor( ScintillaEditPtr );
 	EditorPtr getEditor( ScintillaEdit * );
 	EditorPtr getEditorForFile( QString );
 	const std::vector< EditorPtr > &getEditors( );
 	
-	ScintillaEditPtr getWidget( EditorPtr );
-	
 	bool removeEditor( EditorPtr );
+	void cleanRemoved( );
 	
 	bool areEditorsDirty( );
 

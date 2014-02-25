@@ -5,7 +5,7 @@
 #include <boost/lexical_cast.hpp>
 
 
-Editor::Editor( ScintillaEditPtr editor ) : editor(editor), isDirty(false) {
+Editor::Editor( ScintillaEdit *editor ) : editor(editor), filePath(""), isDirty(false) {
 
 	//editor->setViewEOL( true );
 	lastFound = QPair<int, int>( 0, 0 );
@@ -13,8 +13,7 @@ Editor::Editor( ScintillaEditPtr editor ) : editor(editor), isDirty(false) {
 
 
 Editor::~Editor( ) {
-	
-	std::cout << "Editor for " << filePath.fileName().toStdString() << " destroyed." << std::endl;
+
 }
 
 
@@ -28,7 +27,7 @@ bool Editor::loadFile( QFileInfo file ) {
 		return false;
 	}
 	
-	filePath = file;
+	filePath = file.filePath();
 
 	// file is unique and can be open/created:
 	QFile newFile( file.filePath() );
@@ -44,14 +43,12 @@ bool Editor::loadFile( QFileInfo file ) {
 	//ILoader *loader = editor->createLoader(  )
 	
 	QTextStream in( &newFile );
-	//QString line = in.readLine();
 	while( !in.atEnd() ) {
 		
 		QString buffer = in.read( 100 );
 		
 		// process line:
 		editor->addText( buffer.length(), buffer.toAscii() );
-		//editor->addStyledText( buffer.length(), buffer.toAscii() );
 	}
 	
 	editor->setSavePoint();
@@ -67,7 +64,7 @@ bool Editor::loadFile( QFileInfo file ) {
  */
 bool Editor::saveFile( ) {
 	
-	QFile file( filePath.filePath() );
+	QFile file( filePath );
 	if( !file.open( QIODevice::WriteOnly | QIODevice::Text) ) {
 		
 		std::cout << "Could not open file for saving..." << std::endl;
@@ -82,8 +79,8 @@ bool Editor::saveFile( ) {
 	QTextStream out( &file );
 	out << data;
 	
-	//std::cout << "Text at 0 " << data.data() << std::endl;
-	
+	file.close();
+
 	editor->setSavePoint();
 	editor->setReadOnly( false );
 	
@@ -100,7 +97,7 @@ void Editor::setFile( QString newName ) {
 		return;
 	}
 	
-	filePath = QFileInfo( newName );
+	filePath = newName;
 }
 
 /**
@@ -109,7 +106,7 @@ void Editor::setFile( QString newName ) {
  */
 void Editor::setFile( QFileInfo newFilePath ) {
 	
-	filePath = newFilePath;
+	filePath = newFilePath.filePath();
 }
 
 /**
@@ -118,7 +115,7 @@ void Editor::setFile( QFileInfo newFilePath ) {
  */
 QString Editor::getFileName( ) {
 	
-	return filePath.fileName();
+	return QFileInfo( filePath ).fileName();
 }
 
 /**
@@ -127,7 +124,7 @@ QString Editor::getFileName( ) {
  */
 QString Editor::getFilePath( ) {
 	
-	return filePath.filePath();
+	return filePath;
 }
 
 /**
@@ -136,6 +133,10 @@ QString Editor::getFilePath( ) {
  */
 QPair<int, int> Editor::findNext( QString searchString ) {
 	
+	if( !editor ) {
+		return QPair<int, int>( -1, 0 );
+	}
+
 	int docLength = editor->get_doc()->length();
 	
 	lastFound = editor->find_text( 0, searchString.toStdString().data(), lastFound.second, docLength );
@@ -159,6 +160,10 @@ QPair<int, int> Editor::findNext( QString searchString ) {
  *
  */
 QPair<int, int> Editor::findPrevious( QString searchString ) {
+
+	if( !editor ) {
+		return QPair<int, int>( -1, 0 );
+	}
 	
 	lastFound = editor->find_text( 0, searchString.toStdString().data(), lastFound.first, 0 );
 	
@@ -182,6 +187,10 @@ QPair<int, int> Editor::findPrevious( QString searchString ) {
  */
 QPair<int, int> Editor::replaceNext( QString search, QString replace ) {
 	
+	if( !editor ) {
+		return QPair<int, int>( -1, 0 );
+	}
+
 	int docLength = editor->get_doc()->length();
 	
 	lastFound = editor->find_text( 0, search.toStdString().data(), lastFound.second, docLength );
@@ -207,7 +216,16 @@ QPair<int, int> Editor::replaceNext( QString search, QString replace ) {
  *
  *
  */
-ScintillaEditPtr Editor::getScintillaEdit( ) {
+ScintillaEdit *Editor::getScintillaEdit( ) {
 
 	return editor;
+}
+
+/**
+ *
+ *
+ */
+void Editor::setScintillaEdit( ScintillaEdit *newEditor ) {
+
+	editor = newEditor;
 }

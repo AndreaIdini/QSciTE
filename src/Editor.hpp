@@ -9,9 +9,6 @@
 #include <QFileInfo>
 
 
-typedef boost::shared_ptr< ScintillaEdit > ScintillaEditPtr;
-
-
 /**
  * class Editor
  * Wrapper for a ScintillaEdit qt widget.
@@ -23,8 +20,8 @@ class Editor {
 	
 private:
 
-	ScintillaEditPtr editor;
-	QFileInfo filePath;
+	ScintillaEdit *editor;
+	QString filePath;
 	
 	QPair<int, int> lastFound;
 
@@ -34,7 +31,7 @@ public:
 	
 public:
 	
-	Editor( ScintillaEditPtr );
+	Editor( ScintillaEdit * );
 	virtual ~Editor( );
 	
 	bool loadFile( QString );
@@ -52,20 +49,11 @@ public:
 	QPair<int, int> findPrevious( QString );
 	QPair<int, int> replaceNext( QString, QString );
 	
-	ScintillaEditPtr getScintillaEdit( );
+	ScintillaEdit * getScintillaEdit( );
+	void setScintillaEdit( ScintillaEdit * );
 	
 };
 
 typedef boost::shared_ptr< Editor > EditorPtr;
-
-
-//// From Scintilla
-//class ILoader {
-//public:
-//	virtual int SCI_METHOD Release() = 0;
-//	// Returns a status code from SC_STATUS_*
-//	virtual int SCI_METHOD AddData(char *data, int length) = 0;
-//	virtual void * SCI_METHOD ConvertToDocument() = 0;
-//};
 
 #endif

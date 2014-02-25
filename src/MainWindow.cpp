@@ -95,7 +95,7 @@ void MainWindow::newFile( ) {
 	
 	if( editor ) {
 		
-		ScintillaEditPtr editorWidget = editor->getScintillaEdit( );
+		ScintillaEdit *editorWidget = editor->getScintillaEdit( );
 		
 		setupEditor( editorWidget );
 		registerEditorListeners( editorWidget );
@@ -106,14 +106,14 @@ void MainWindow::newFile( ) {
 		switch( active ) {
 			case LEFT_SPLITTER: {
 				
-				int index = ui.tabBarLeft->addTab( editorWidget.get(), tr("untitled") );
+				int index = ui.tabBarLeft->addTab( editorWidget, tr("untitled") );
 				ui.tabBarLeft->setCurrentIndex( index );
 				editorWidget->grabFocus();
 				break;
 			}
 			case RIGHT_SPLITTER: {
 				
-				int index = ui.tabBarRight->addTab( editorWidget.get(), tr("untitled") );
+				int index = ui.tabBarRight->addTab( editorWidget, tr("untitled") );
 				ui.tabBarRight->setCurrentIndex( index );
 				editorWidget->grabFocus();
 				break;
@@ -145,14 +145,14 @@ void MainWindow::openFile( QString fileName ) {
 			QTabWidget *currentTabBar = ( active == LEFT_SPLITTER ? ui.tabBarLeft : ui.tabBarRight );
 			
 			// move focus to editor:
-			ScintillaEditPtr widget = editorManager->getWidget( existingEditor );
+			ScintillaEdit *widget = existingEditor->getScintillaEdit();
 			if( widget ) {
 				
 				QTabWidget *tabBar = (QTabWidget *) widget->parentWidget()->parentWidget();
 				
 				// case when in the same splitter:
 				if( tabBar == currentTabBar ) {
-					tabBar->setCurrentWidget( widget.get() );
+					tabBar->setCurrentWidget( widget );
 					widget->grabFocus();
 					return;
 				}
@@ -160,7 +160,7 @@ void MainWindow::openFile( QString fileName ) {
 				// if we get here we need a new editor and to share scintilla document:
 				EditorPtr editor = editorManager->createEditor( );
 				
-				ScintillaEditPtr editorWidget = editor->getScintillaEdit( );
+				ScintillaEdit *editorWidget = editor->getScintillaEdit( );
 				setupEditor( editorWidget );
 				registerEditorListeners( editorWidget );
 				
@@ -169,7 +169,7 @@ void MainWindow::openFile( QString fileName ) {
 				
 				setupLexing( editor );
 				
-				int index = currentTabBar->addTab( editorWidget.get(), editor->getFileName() );
+				int index = currentTabBar->addTab( editorWidget, editor->getFileName() );
 				currentTabBar->setCurrentIndex( index );
 				editorWidget->grabFocus();
 				return;
@@ -186,7 +186,7 @@ void MainWindow::openFile( QString fileName ) {
 		
 		if( editor ) {
 			
-			ScintillaEditPtr editorWidget = editor->getScintillaEdit( );
+			ScintillaEdit *editorWidget = editor->getScintillaEdit( );
 			setupEditor( editorWidget );
 			registerEditorListeners( editorWidget );
 			
@@ -201,14 +201,14 @@ void MainWindow::openFile( QString fileName ) {
 			switch( active ) {
 				case LEFT_SPLITTER: {
 					
-					int index = ui.tabBarLeft->addTab( editorWidget.get(), editor->getFileName() );
+					int index = ui.tabBarLeft->addTab( editorWidget, editor->getFileName() );
 					ui.tabBarLeft->setCurrentIndex( index );
 					editorWidget->grabFocus();
 					break;
 				}
 				case RIGHT_SPLITTER: {
 					
-					int index = ui.tabBarRight->addTab( editorWidget.get(), editor->getFileName() );
+					int index = ui.tabBarRight->addTab( editorWidget, editor->getFileName() );
 					ui.tabBarRight->setCurrentIndex( index );
 					editorWidget->grabFocus();
 					break;
@@ -319,11 +319,11 @@ void MainWindow::closeFile( int index ) {
 	splitter active = getCurrentSplitter( );
 	switch( active ) {
 		case LEFT_SPLITTER: {
-			editor = editorManager->getEditor( (ScintillaEdit *) ui.tabBarLeft->currentWidget() );
+			editor = editorManager->getEditor( (ScintillaEdit *) ui.tabBarLeft->widget( index ) );
 			break;
 		}
 		case RIGHT_SPLITTER: {
-			editor = editorManager->getEditor( (ScintillaEdit *) ui.tabBarRight->currentWidget() );
+			editor = editorManager->getEditor( (ScintillaEdit *) ui.tabBarRight->widget( index ) );
 			break;
 		}
 	}
@@ -341,7 +341,16 @@ void MainWindow::closeFile( int index ) {
 	}
 	
 	// Finally remove tab:
-	ui.tabBarLeft->removeTab( index );
+	switch( active ) {
+		case LEFT_SPLITTER: {
+			ui.tabBarLeft->removeTab( index );
+			break;
+		}
+		case RIGHT_SPLITTER: {
+			ui.tabBarRight->removeTab( index );
+			break;
+		}
+	}
 
 	editorManager->removeEditor( editor );
 }
@@ -622,7 +631,11 @@ void MainWindow::setDoubleVSplitter( ) {
  * Setups default options for the editor.
  * @author: jhenriques 2014
  */
-void MainWindow::setupEditor( ScintillaEditPtr editor ) {
+void MainWindow::setupEditor( ScintillaEdit *editor ) {
+
+	if( !editor ) {
+		return;
+	}
 
 	// Margins:
 	editor->setMarginTypeN( 1, 1 );
@@ -647,10 +660,13 @@ void MainWindow::setupEditor( ScintillaEditPtr editor ) {
  * Registers to listen to ScintillaEdit widget important signals;
  * @author: jhenriques 2014
  */
-void MainWindow::registerEditorListeners( ScintillaEditPtr editor ) {
+void MainWindow::registerEditorListeners( ScintillaEdit *editor ) {
 	
-	connect( editor.get(), SIGNAL(savePointChanged(bool)), this, SLOT(editorModified(bool)) );
-	
+	if( !editor ) {
+		return;
+	}
+
+	connect( editor, SIGNAL(savePointChanged(bool)), this, SLOT(editorModified(bool)) );
 }
 
 /**
@@ -762,7 +778,7 @@ void MainWindow::setupLexing( EditorPtr editor ) {
  */
 void MainWindow::setupCPPLexing( EditorPtr editor ) {
 	
-	ScintillaEditPtr editorWidget = editor->getScintillaEdit();
+	ScintillaEdit *editorWidget = editor->getScintillaEdit( );
 	
 	// CPP lexer
 	editorWidget->setLexer( SCLEX_CPP );
@@ -892,7 +908,7 @@ void MainWindow::setupCPPLexing( EditorPtr editor ) {
  */
 void MainWindow::setupFortranLexing( EditorPtr editor ) {
 	
-	ScintillaEditPtr editorWidget = editor->getScintillaEdit();
+	ScintillaEdit *editorWidget = editor->getScintillaEdit( );
 	
 	// CPP lexer
 	editorWidget->setLexer( SCLEX_FORTRAN );

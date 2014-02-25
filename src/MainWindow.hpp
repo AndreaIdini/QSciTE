@@ -72,8 +72,8 @@ private:
 	
 	
 	// --== methods ==--
-	void setupEditor( ScintillaEditPtr );
-	void registerEditorListeners( ScintillaEditPtr );
+	void setupEditor( ScintillaEdit * );
+	void registerEditorListeners( ScintillaEdit * );
 	void registerMainWindowActions();
 	
 	void createActions();
