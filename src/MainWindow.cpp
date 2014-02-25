@@ -572,7 +572,7 @@ void MainWindow::setSingleSplitter( ) {
 			QTabWidget *right = ui.tabBarRight;
 			
 			for( int i = 0, iCount = right->count(); i < iCount; ++i ) {
-				QWidget *toMove = right->widget( i );
+				QWidget *toMove = right->currentWidget( );
 				moveTab( toMove, right, left );
 			}
 
