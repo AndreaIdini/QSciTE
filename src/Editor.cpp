@@ -146,6 +146,9 @@ QPair<int, int> Editor::findNext( QString searchString ) {
 		editor->setSelectionStart( lastFound.first );
 		editor->setSelectionEnd( lastFound.second );
 		
+		// does not seem to work...
+		editor->findIndicatorShow( lastFound.first, lastFound.second );
+		
 	} else {
 		
 		// allow the find to loop:

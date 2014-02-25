@@ -638,21 +638,43 @@ void MainWindow::setupEditor( ScintillaEdit *editor ) {
 	}
 
 	// Margins:
-	editor->setMarginTypeN( 1, 1 );
-	editor->setMarginWidthN( 1, 20 );
+	editor->setMarginTypeN( 0, SC_MARGIN_NUMBER );
+	editor->setMarginMaskN( 0, ~SC_MASK_FOLDERS );
+	editor->setMarginWidthN( 0, 20 );
+	editor->styleSetBack( STYLE_LINENUMBER, base3 );
+	editor->styleSetFont( STYLE_LINENUMBER, "DejaVu Sans Mono" );
+	editor->styleSetSize( STYLE_LINENUMBER, 10 );
+	editor->styleSetFore( STYLE_LINENUMBER, base0 );
 
+	// hide this margin
+	editor->setMarginWidthN( 1, 0 );
+	
 	// Set up the global default style. These attributes
 	// are used wherever no explicit choices are made.
-	editor->styleSetFont( STYLE_DEFAULT, "DejaVu Sans" );
+	editor->styleSetFont( STYLE_DEFAULT, "DejaVu Sans Mono" );
 	editor->styleSetSize( STYLE_DEFAULT, 11 );
 	editor->styleSetFore( STYLE_DEFAULT, base0 );
 	editor->styleSetBack( STYLE_DEFAULT, base3 );
+	
+	// plain text:
+	editor->styleSetFont( 0, "DejaVu Sans Mono" );
+	editor->styleSetSize( 0, 11 );
+	editor->styleSetFore( 0, base0 );
+	editor->styleSetBack( 0, base3 );
 	
 	// Set caret foreground color
 	editor->setCaretFore( base0 );
 	
 	// Set selection color
 	editor->setSelBack( 1, base2 );
+	
+	// identation:
+	editor->setTabWidth( 3 );
+	editor->setUseTabs( true );
+	editor->setIndent( 0 );
+	editor->setIndentationGuides( SC_IV_LOOKBOTH );
+	
+	//editor->setCaretSticky( SC_CARETSTICKY_WHITESPACE );
 }
 
 /**
@@ -667,6 +689,7 @@ void MainWindow::registerEditorListeners( ScintillaEdit *editor ) {
 	}
 
 	connect( editor, SIGNAL(savePointChanged(bool)), this, SLOT(editorModified(bool)) );
+	
 }
 
 /**
@@ -783,12 +806,6 @@ void MainWindow::setupCPPLexing( EditorPtr editor ) {
 	// CPP lexer
 	editorWidget->setLexer( SCLEX_CPP );
 	
-	// Set number of style bits to use
-	//editorWidget->setStyleBits( 5 );
-	
-	// Set tab width
-	editorWidget->setTabWidth( 3 );
-	
 	// Use CPP keywords
 	QString keywords = "and and_eq asm auto bitand bitor bool break \
 						case catch char class compl const const_cast continue \
@@ -863,6 +880,18 @@ void MainWindow::setupCPPLexing( EditorPtr editor ) {
 	editorWidget->setMarginSensitiveN( 2, true );
 	//editorWidget->setAutomaticFold( SC_AUTOMATICFOLD_SHOW & SC_AUTOMATICFOLD_CLICK & SC_AUTOMATICFOLD_CHANGE );
 	editorWidget->setAutomaticFold( SC_AUTOMATICFOLD_CLICK );
+	
+	// Margins:
+	editorWidget->setMarginTypeN( 0, SC_MARGIN_NUMBER );
+	editorWidget->setMarginMaskN( 0, ~SC_MASK_FOLDERS );
+	editorWidget->setMarginWidthN( 0, 20 );
+	editorWidget->styleSetBack( STYLE_LINENUMBER, base3 );
+	editorWidget->styleSetFont( STYLE_LINENUMBER, "DejaVu Sans Mono" );
+	editorWidget->styleSetSize( STYLE_LINENUMBER, 10 );
+	editorWidget->styleSetFore( STYLE_LINENUMBER, base0 );
+	
+	// hide this margin
+	editorWidget->setMarginWidthN( 1, 0 );
 	
 	editorWidget->setFoldMarginColour( true, base3 );
 	
@@ -1002,6 +1031,18 @@ void MainWindow::setupFortranLexing( EditorPtr editor ) {
 	editorWidget->setMarginSensitiveN( 2, true );
 	//editorWidget->setAutomaticFold( SC_AUTOMATICFOLD_SHOW & SC_AUTOMATICFOLD_CLICK & SC_AUTOMATICFOLD_CHANGE );
 	editorWidget->setAutomaticFold( SC_AUTOMATICFOLD_CLICK );
+	
+	// Margins:
+	editorWidget->setMarginTypeN( 0, SC_MARGIN_NUMBER );
+	editorWidget->setMarginMaskN( 0, ~SC_MASK_FOLDERS );
+	editorWidget->setMarginWidthN( 0, 20 );
+	editorWidget->styleSetBack( STYLE_LINENUMBER, base3 );
+	editorWidget->styleSetFont( STYLE_LINENUMBER, "DejaVu Sans Mono" );
+	editorWidget->styleSetSize( STYLE_LINENUMBER, 10 );
+	editorWidget->styleSetFore( STYLE_LINENUMBER, base0 );
+	
+	// hide this margin
+	editorWidget->setMarginWidthN( 1, 0 );
 	
 	editorWidget->setFoldMarginColour( true, base3 );
 	
