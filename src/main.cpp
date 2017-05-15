@@ -1,8 +1,6 @@
 /**
  * QSciTE main 
  * QSciTE is a Qt based editor with a scintilla backend.
- *
- * @author: José Henriques (jhenriques@gmail.com)
  */
 
 #include <QApplication>
@@ -24,8 +22,8 @@ int main( int argc, char* argv[] ) {
 	QApplication app( argc, argv );
 	
 	// Set application meta information:
-	QCoreApplication::setOrganizationName( "QSciTE by José Henriques" );
-	QCoreApplication::setOrganizationDomain( "QSciTE.com" );
+	QCoreApplication::setOrganizationName( "QSciTE by Andrea Idini" );
+	QCoreApplication::setOrganizationDomain( "www.phme.it/wilt/" );
 	QCoreApplication::setApplicationName( "QSciTE" );
 	
 	// TODO: Replace icon.

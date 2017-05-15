@@ -2,8 +2,6 @@
 # QSciTE cmake file
 # Initializes the standard flags for the compilers
 # created by CMake with custom values.
-# 
-# José Henriques 2014
 #----------------------------------------------------------------------------
 
 #----------------------------------------------------------------------------

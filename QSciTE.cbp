@@ -1,0 +1,133 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes" ?>
+<CodeBlocks_project_file>
+   <FileVersion major="1" minor="6" />
+   <Project>
+      <Option title="QSciTE" />
+      <Option makefile_is_custom="1" />
+      <Option compiler="gcc" />
+      <Option virtualFolders="CMake Files\;CMake Files\tools\;CMake Files\tools\cmake\;CMake Files\resources\;" />
+      <Build>
+      <Target title="all">
+         <Option working_dir="/home/andrea/Code/qscite" />
+         <Option type="4" />
+         <MakeCommands>
+            <Build command="/usr/bin/make -f &quot;/home/andrea/Code/qscite/Makefile&quot;  VERBOSE=1 all" />
+            <CompileFile command="/usr/bin/make -f &quot;/home/andrea/Code/qscite/Makefile&quot;  VERBOSE=1 &quot;$file&quot;" />
+            <Clean command="/usr/bin/make -f &quot;/home/andrea/Code/qscite/Makefile&quot;  VERBOSE=1 clean" />
+            <DistClean command="/usr/bin/make -f &quot;/home/andrea/Code/qscite/Makefile&quot;  VERBOSE=1 clean" />
+         </MakeCommands>
+      </Target>
+      <Target title="QSciTE">
+         <Option output="/home/andrea/Code/qscite/build/Linux-i686/bin/QSciTE" prefix_auto="0" extension_auto="0" />
+         <Option working_dir="/home/andrea/Code/qscite/build/Linux-i686/bin" />
+         <Option object_output="./" />
+         <Option type="0" />
+         <Option compiler="gcc" />
+         <Compiler>
+            <Add option="-DQT_NO_DEBUG" />
+            <Add option="-DQT_OPENGL_LIB" />
+            <Add option="-DQT_GUI_LIB" />
+            <Add option="-DQT_CORE_LIB" />
+            <Add directory="/home/andrea/Code/qscite" />
+            <Add directory="/home/andrea/Code/qscite/3rdparty/scintilla/include" />
+            <Add directory="/home/andrea/Code/qscite/3rdparty/scintilla/qt/ScintillaEdit" />
+            <Add directory="/home/andrea/Code/qscite/3rdparty/scintilla/qt/ScintillaEditBase" />
+            <Add directory="/home/andrea/Code/qscite/resources" />
+            <Add directory="/usr/include/qt4" />
+            <Add directory="/usr/include/qt4/QtCore" />
+            <Add directory="/usr/include/qt4/QtDesigner" />
+            <Add directory="/usr/include/qt4/QtGui" />
+            <Add directory="/usr/include/qt4/QtOpenGL" />
+         </Compiler>
+         <MakeCommands>
+            <Build command="/usr/bin/make -f &quot;/home/andrea/Code/qscite/Makefile&quot;  VERBOSE=1 QSciTE" />
+            <CompileFile command="/usr/bin/make -f &quot;/home/andrea/Code/qscite/Makefile&quot;  VERBOSE=1 &quot;$file&quot;" />
+            <Clean command="/usr/bin/make -f &quot;/home/andrea/Code/qscite/Makefile&quot;  VERBOSE=1 clean" />
+            <DistClean command="/usr/bin/make -f &quot;/home/andrea/Code/qscite/Makefile&quot;  VERBOSE=1 clean" />
+         </MakeCommands>
+      </Target>
+      <Target title="QSciTE/fast">
+         <Option output="/home/andrea/Code/qscite/build/Linux-i686/bin/QSciTE" prefix_auto="0" extension_auto="0" />
+         <Option working_dir="/home/andrea/Code/qscite/build/Linux-i686/bin" />
+         <Option object_output="./" />
+         <Option type="0" />
+         <Option compiler="gcc" />
+         <Compiler>
+            <Add option="-DQT_NO_DEBUG" />
+            <Add option="-DQT_OPENGL_LIB" />
+            <Add option="-DQT_GUI_LIB" />
+            <Add option="-DQT_CORE_LIB" />
+            <Add directory="/home/andrea/Code/qscite" />
+            <Add directory="/home/andrea/Code/qscite/3rdparty/scintilla/include" />
+            <Add directory="/home/andrea/Code/qscite/3rdparty/scintilla/qt/ScintillaEdit" />
+            <Add directory="/home/andrea/Code/qscite/3rdparty/scintilla/qt/ScintillaEditBase" />
+            <Add directory="/home/andrea/Code/qscite/resources" />
+            <Add directory="/usr/include/qt4" />
+            <Add directory="/usr/include/qt4/QtCore" />
+            <Add directory="/usr/include/qt4/QtDesigner" />
+            <Add directory="/usr/include/qt4/QtGui" />
+            <Add directory="/usr/include/qt4/QtOpenGL" />
+         </Compiler>
+         <MakeCommands>
+            <Build command="/usr/bin/make -f &quot;/home/andrea/Code/qscite/Makefile&quot;  VERBOSE=1 QSciTE/fast" />
+            <CompileFile command="/usr/bin/make -f &quot;/home/andrea/Code/qscite/Makefile&quot;  VERBOSE=1 &quot;$file&quot;" />
+            <Clean command="/usr/bin/make -f &quot;/home/andrea/Code/qscite/Makefile&quot;  VERBOSE=1 clean" />
+            <DistClean command="/usr/bin/make -f &quot;/home/andrea/Code/qscite/Makefile&quot;  VERBOSE=1 clean" />
+         </MakeCommands>
+      </Target>
+      <Target title="edit_cache">
+         <Option working_dir="/home/andrea/Code/qscite" />
+         <Option type="4" />
+         <MakeCommands>
+            <Build command="/usr/bin/make -f &quot;/home/andrea/Code/qscite/Makefile&quot;  VERBOSE=1 edit_cache" />
+            <CompileFile command="/usr/bin/make -f &quot;/home/andrea/Code/qscite/Makefile&quot;  VERBOSE=1 &quot;$file&quot;" />
+            <Clean command="/usr/bin/make -f &quot;/home/andrea/Code/qscite/Makefile&quot;  VERBOSE=1 clean" />
+            <DistClean command="/usr/bin/make -f &quot;/home/andrea/Code/qscite/Makefile&quot;  VERBOSE=1 clean" />
+         </MakeCommands>
+      </Target>
+      <Target title="rebuild_cache">
+         <Option working_dir="/home/andrea/Code/qscite" />
+         <Option type="4" />
+         <MakeCommands>
+            <Build command="/usr/bin/make -f &quot;/home/andrea/Code/qscite/Makefile&quot;  VERBOSE=1 rebuild_cache" />
+            <CompileFile command="/usr/bin/make -f &quot;/home/andrea/Code/qscite/Makefile&quot;  VERBOSE=1 &quot;$file&quot;" />
+            <Clean command="/usr/bin/make -f &quot;/home/andrea/Code/qscite/Makefile&quot;  VERBOSE=1 clean" />
+            <DistClean command="/usr/bin/make -f &quot;/home/andrea/Code/qscite/Makefile&quot;  VERBOSE=1 clean" />
+         </MakeCommands>
+      </Target>
+      </Build>
+      <Unit filename="/home/andrea/Code/qscite/src/Editor.cpp">
+      </Unit>
+      <Unit filename="/home/andrea/Code/qscite/src/EditorManager.cpp">
+      </Unit>
+      <Unit filename="/home/andrea/Code/qscite/src/MainWindow.cpp">
+      </Unit>
+      <Unit filename="/home/andrea/Code/qscite/src/main.cpp">
+      </Unit>
+      <Unit filename="/home/andrea/Code/qscite/resources/QSciTE.ui">
+      </Unit>
+      <Unit filename="/home/andrea/Code/qscite/resources/resources.qrc">
+      </Unit>
+      <Unit filename="/home/andrea/Code/qscite/src/Editor.hpp">
+      </Unit>
+      <Unit filename="/home/andrea/Code/qscite/src/EditorManager.hpp">
+      </Unit>
+      <Unit filename="/home/andrea/Code/qscite/src/MainWindow.hpp">
+      </Unit>
+      <Unit filename="/home/andrea/Code/qscite/CMakeLists.txt">
+          <Option virtualFolder="CMake Files\" />
+      </Unit>
+      <Unit filename="/home/andrea/Code/qscite/CompilerDefaultFlags.cmake">
+          <Option virtualFolder="CMake Files\" />
+      </Unit>
+      <Unit filename="/home/andrea/Code/qscite/CompilerDefaultFlags.cmake">
+          <Option virtualFolder="CMake Files\" />
+      </Unit>
+      <Unit filename="/home/andrea/Code/qscite/tools/cmake/FindScintilla.cmake">
+          <Option virtualFolder="CMake Files\tools\cmake\" />
+      </Unit>
+      <Unit filename="/home/andrea/Code/qscite/resources/resources.qrc">
+          <Option virtualFolder="CMake Files\resources\" />
+      </Unit>
+   </Project>
+</CodeBlocks_project_file>

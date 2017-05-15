@@ -1,7 +1,5 @@
 #----------------------------------------------------------------------------
 # QSciTE cmake file
-# 
-# José Henriques 2014
 #----------------------------------------------------------------------------
 cmake_minimum_required(VERSION 2.6)
 
@@ -13,6 +11,8 @@ if( NOT DEFINED CMAKE_USER_MAKE_RULES_OVERRIDE )
 endif( NOT DEFINED CMAKE_USER_MAKE_RULES_OVERRIDE )
 
 project( QSciTE )
+
+set (QT_QMAKE_EXECUTABLE /usr/bin/qmake-qt4)
 
 #----------------------------------------------------------------------------
 # Project wide cmake configuration:
