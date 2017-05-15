@@ -8,8 +8,8 @@ QT4 (yes, sorry), CMake
 
 Compile with cmake ./
 
-###License
+### License
 GNU3 licence, 2013, Andrea Idini.
-Not supported
+*Not supported*
 
 Help of J. Henriquez acknowledged.
